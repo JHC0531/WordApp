@@ -1,90 +1,109 @@
-﻿ID,Set,Hint,Word,Meaning,Sentence,Translation
-1,set1,single word,agree,동의하다,"Yes, I agree.","응, 나도 동의해."
-2,set1,idiom,be good at,~을 잘하다,She is good at growing plants.,그녀는 식물을 잘 키운다.
-3,set1,single word,blue,우울한,You look blue today.,너 오늘 우울해 보인다.
-4,set1,idiom,break down,분해되다, Plastic bottles take 450 years to break down.,플라스틱 병은 분해되는데 450년이 걸린다.
-5,set1,single word,explanation,설명,Can you give more of an explanation?,설명을 좀 더 해줄 수 있니?
-6,set1,single word,get up,"일어나다, 기상하다",They get up early in the morning,그들은 아침에 일찍 일어난다.
-7,set1,idiom,in the middle of,~의 한가운데에,What are those in the middle of the ocean?,바다 한가운데 있는 저것들은 뭐야?
-8,set1,single word,reuse,재사용하다,Let’s reuse plastic bags.,비닐봉지를 다시 사용하자.
-9,set1,single word,surprise,"놀라움, 놀라운 일",What a surprise!,정말 놀랍다!
-10,set1,single word,surprised,놀란 (사람의 감정),I’m so surprised!,나는 정말 놀랐어!
-11,set1,single word,surprising,놀라운 (상황이나 사실),That’s surprising!,그거 놀랍네!
-12,set1,idiom,throw away,버리다,Don’t throw away the box. We can use it again.,그 상자 버리지 마. 우리는 그것을 다시 사용할 수 있어.
-13,set1,single word,thumb,엄지손가락,He cuts his thumb while cooking dinner.,그는 저녁을 요리하다가 엄지손가락을 베었다.
-14,set1,single word,unbelievable,믿을 수 없는,That’s unbelievable!,그건 믿을 수 없어!
-15,set2,single word,become,~이 되다,A lot of plastic bags go into the ocean and become big islands.,많은 비닐봉지들이 바다로 들어가서 큰 섬이 된다.
-16,set2,single word,bin,(쓰레기) 통,Put the bottle in the recycling bin.,그 병을 재활용 통에 넣어라.
-17,set2,single word,blender,"믹서기, 분쇄기",I use the blender to make smoothies.,나는 스무디를 만들기 위해 믹서기를 사용한다.
-18,set2,single word,challenge,도전,She is ready for the next challenge.,그녀는 다음 도전을 할 준비가 되었다.
-19,set2,single word,choose,선택하다,It's hard to choose one flavor at the ice cream store.,아이스크림 가게에서 한 가지 맛을 고르는 것은 어렵다.
-20,set2,single word,collect,"모으다, 수집하다",I collect postcards from the countries I visit.,나는 방문하는 나라에서 온 엽서를 수집한다.
-21,set2,single word,cotton,"무명, 면",I like to wear cotton T-shirts in the summer.,나는 여름에 면 티셔츠를 입는 것을 좋아한다.
-22,set2,single word,empty,비어 있는,There are many empty seats in the theater.,극장에 비어 있는 자리들이 많다.
-23,set2,two words,food waste,음식 쓰레기,Separate the food waste from the garbage.,쓰레기에서 음식 쓰레기를 분리하라.
-24,set2,single word,instead,대신에,You have to drink a lot of water instead of soda.,너는 탄산음료 대신 많은 물을 마셔야 한다.
-25,set2,single word,island,섬,Our airplane will land on a small island soon.,이 비행기는 곧 작은 섬에 착륙할 것이다.
-26,set2,single word,item,"품목, 항목",This item is on sale.,이 품목은 지금 세일 중이다.
-27,set2,single word,language,언어,English is a hard language to learn.,영어는 배우기 어려운 언어이다.
-28,set2,single word,machine,기계,There is a huge machine in the factory.,그 공장에는 거대한 기계가 있다.
-29,set2,single word,natural,"자연의, 가공하지 않은",Animals live peacefully in their natural environment.,동물들은 자연의 환경에서 평화롭게 산다.
-30,set3,single word,nothing,아무것도 …아니다,There is nothing in the refrigerator.,냉장고에는 아무것도 없다.
-31,set3,single word,ocean,"대양, 바다",There are many islands in the Pacific Ocean.,태평양에는 많은 섬들이 있다.
-32,set3,single word,packaging,"포장, 포장지",You can choose your own packaging.,당신은 당신만의 포장을 고를 수 있다.
-33,set3,single word,plate,접시,Can you bring your plate when you are done eating?,다 먹었으면 너의 접시를 가져올 수 있겠니?
-34,set3,single word,recycle,재활용하다,You should recycle to help the environment.,당신은 환경을 돕기 위해 재활용을 해야 한다.
-35,set3,single word,reduce,"줄이다, 축소하다",We can reduce waste by eating all our food.,우리는 모든 음식을 먹음으로써 쓰레기를 줄일 수 있다.
-36,set3,single word,reusable,재사용할 수 있는,I bring a reusable water bottle to school every day.,나는 재사용 할 수 있는 물통을 매일 학교에 가져온다.
-37,set3,single word,save,"절약하다, 아끼다",Turn off the running tap to save water.,물을 절약하기 위해 흐르는 수도꼭지를 잠가라.
-38,set3,single word,simple,"간단한, 단순한",I like clothing with simple designs.,나는 간단한 모양의 옷을 좋아한다.
-39,set3,single word,skin,피부,She also drinks a lot of water for her skin.,그녀는 또한 자신의 피부를 위해서 물을 많이 마신다.
-40,set3,single word,spotless,티끌 하나 없는,My sister keeps her room spotless.,내 여동생은 그녀의 방을 티끌 하나 없이 유지한다.
-41,set3,single word,terrible,끔찍한,I had a terrible cold for two weeks.,나는 2주 동안 끔찍한 감기에 걸렸었다.
-42,set3,single word,trash,쓰레기,It is bad to throw trash on the ground.,땅에 쓰레기를 버리는 것은 나쁜 것이다.
-43,set3,single word,wrap,포장하다,Why don't you wrap the gift for your mother with a red ribbon?,너의 어머니를 위한 선물을 붉은 리본으로 포장하는 것은 어때?
-44,set4,single word,bookshelf,책장,There are many storybooks on the bookshelf.,책장에 동화책이 많이 있다.
-45,set4,single word,Braille,점자,I’m thinking of adding Braille on the sign.,나는 그 표지판에 점자를 추가할 생각이다.
-46,set4,idiom,by oneself,혼자서,I can’t do it all by myself.,나는 그것을 혼자서는 다 할 수 없어.
-47,set4,idiom,complain about,~에 대해 불평하다,They complain about the noisy classroom.,그들은 시끄러운 교실에 대해 불평한다.
-48,set4,idiom,content with,~에 만족하는,He is content with his simple life.,그는 자신의 단순한 삶에 만족한다.
-49,set4,single word,decide,결정하다,They often decide to stay home instead of going to the cinema.,그들은 종종 영화관에 가는 대신 집에 머물기로 결정한다.
-50,set4,single word,decorate,"장식하다, 꾸미다.",We need to decorate the classroom.,우리는 교실을 장식해야 해.
-51,set4,single word,either,~도 또한 〔역시〕,"I don't like strawberry, either.",나도 딸기를 좋아하지 않는다.
-52,set4,single word,fair,"공평한, 공정한",It’s not fair.,그건 공정하지 않아.
-53,set4,single word,satisfactory,"만족스러운, 충분한",The teacher said my homework was satisfactory.,선생님은 내 숙제가 만족스럽다고 말씀하셨다.
-54,set4,idiom,satisfied with,~에 만족하는,She was satisfied with her exam results.,그녀는 시험 결과에 만족했다.
-55,set4,two words,step box,발판,I need a step box to reach the book above the bookshelf.,책장 위에 있는 책을 꺼내려면 발판이 필요해.
-56,set4,idiom,turn on,켜다,It’s too hot here. I’ll turn on the air conditioner.,여기 너무 덥다. 에어컨 켤게.
-57,set4,idiom,watch out,조심하다,Watch out! The bus is coming.,조심해! 버스가 온다!
-58,set4,single word,way,방법,Is there another way to solve the problem?,그 문제를 해결할 다른 방법이 있나요?
-59,set5,single word,almost,거의,I have almost finished my homework.,나는 내 숙제를 거의 끝마쳤다.
-60,set5,single word,bath,목욕,He is taking a bath.,그는 목욕을 하고 있다.
-61,set5,single word,bathtub,욕조,The bathtub was full of bubbles.,그 욕조는 거품으로 가득 찼다.
-62,set5,single word,blind,눈이 먼,The dog helps the blind man.,그 개는 맹인 남자를 돕는다.
-63,set5,single word,company,회사,She worked for 3 years at the company.,그녀는 그 회사에서 3년 동안 근무했다.
-64,set5,single word,cross,건너다,Be careful when you cross the street.,길을 건널 때는 조심해라.
-65,set5,single word,crowded,"붐비는, 복잡한",The bus is so crowded.,그 버스는 매우 붐빈다.
-66,set5,single word,cushion,"쿠션, 방석",There is a cushion on the sofa.,소파 위에는 한 개의 쿠션이 있다.
-67,set5,single word,dirty,더러운,His pants were so dirty after playing baseball in the rain.,그의 바지는 빗속에서 야구를 한 후에 아주 더러웠다.
-68,set5,single word,flat,평평한,"In the past, people believed the Earth was flat.",과거에 사람들은 지구가 평평하다고 믿었다.
-69,set5,single word,fountain,"음수대, 분수",She and I will meet at the fountain tomorrow.,그녀와 나는 내일 분수에서 만날 것이다.
-70,set5,single word,handle,손잡이,Turn the door handle if you want to open the door.,문을 열고 싶다면 문손잡이를 돌리세요.
-71,set5,single word,however,"그러나, 하지만","It has gotten warm these days. However, it is still cold in the morning.",요즈음 날이 따뜻해졌다. 그러나 아침에는 여전히 춥다.
-72,set5,single word,journey,"여행, 여정",He is away on a journey.,그는 여행으로 부재중이다.
-73,set5,two words,jump rope,줄넘기를 하다,I'm going to jump rope every day.,나는 매일 줄넘기를 할 예정이다.
-74,set6,single word,locker,사물함,I put my books in the school locker.,나는 학교 사물함에 내 책들을 둔다.
-75,set6,single word,low,낮은,This room has a low ceiling.,이 방은 천장이 낮다.
-76,set6,single word,pad,"패드, 깔개",He puts a pad inder the chair leg to stop the noise.,그는 의자 다리 밑에 패드를 놓아 소음을 막았다.
-77,set6,single word,product,"제품, 상품",This product is very popular now.,이 제품은 지금 매우 인기가 많습니다.
-78,set6,single word,reach,~에 닿다,She could not reach the window.,그녀는 창문에 다다를 수 없었다.
-79,set6,single word,station,"역, 정류장",A subway car is arriving at the station.,지하철이 역에 도착하고 있다.
-80,set6,single word,swing,그네,The boy is playing on the swing.,그 소년은 그네를 타는 중이다.
-81,set6,single word,switch,스위치,Turn on the switch.,스위치를 켜라.
-82,set6,single word,tight,"꽉 조이는, 딱 붙는",This jacket is too tight for me.,이 재킷은 내겐 너무 꽉 조인다.
-83,set6,single word,traffic,교통,There is a lot of traffic on weekends.,주말에는 극심한 교통 체증이 있다.
-84,set6,single word,uncomfortable,불편한,The chair is so hard and uncomfortable.,의자가 너무 딱딱하고 불편하다.
-85,set6,single word,universal,보편적인,Laughter is a universal language.,웃음은 보편적인 언어다.
-86,set6,single word,view,"견해, 관점",I don't agree with his view.,나는 그의 견해에 동의하지 않는다.
-87,set6,single word,wiper,"닦개, 와이퍼",This wiper is for cleaning the mirror.,이 와이퍼는 거울을 닦기 위한 것이다.
-,,,,,,
-,,,,,,
+ID,Set,Word,Meaning,Sentence,Translation,
+1,set1,angry,형. 화난,Are you angry?,너 화났니?,
+2,set1,badminton,명. 배드민턴,His favorite sport is badminton.,그가 가장 좋아하는 운동은 배드민턴이다.,
+3,set1,Band-Aid,명. 반창고,Put a Band-Aid on your face.,얼굴에 밴드를 붙여라.,
+4,set1,baseball,명. 야구,My favorite sport is baseball.,내가 가장 좋아하는 운동은 야구다.,
+5,set1,basketball,명. 농구,Do you like basketball?,너는 농구를 좋아하니?,
+6,set1,classmate,명. 반 친구,My classmates are kind.,내 반 친구들은 친절하다.,
+7,set1,comedy,"명. 코미디, 희극",This comedy show is really popular.,이 코미디 쇼는 정말 인기가 많다.,
+8,set1,erase,동. 지우다,Erase the wrong answer and try again.,틀린 답을 지우고 다시 해봐라.,
+9,set1,eraser,명. 지우개,Does she have an eraser?,그녀는 지우개를 가지고 있니?,
+10,set1,favorite,형. 가장 좋아하는,What's your favorite food?,네가 가장 좋아하는 음식은 무엇이니?,
+11,set1,hit,동. (버튼 등을) 누르다,"Please hit the ""like"" button!",“좋아요” 버튼을 눌러 주세요.,
+12,set1,hurt,"형. 다친, 상처 입은",My feelings get hurt sometimes.,나는 가끔 마음이 상한다.,
+13,set1,learn,동. 배우다,What subjects do we learn?,우리는 어떤 과목을 배우니?,
+14,set1,lunchtime,명. 점심시간,I love lunchtime.,나는 점심시간이 좋다.,
+15,set2,magician,명. 마법사,"We wear all black, like magicians!",우리는 마술사처럼 온통 검은색을 입는다.,
+16,set2,mirror,명. 거울,The girl looks in the mirror every day.,그 소녀는 매일 거울을 본다.,
+17,set2,mistake,명. 실수,Anyone can make a mistake.,누구나 실수할 수 있다.,
+18,set2,nervous,"형. 긴장한, 불안해하는",I feel nervous before every exam.,나는 시험 전에 항상 긴장한다.,
+19,set2,remember,동. 기억하다,I can’t remember his name.,나는 그의 이름이 기억나지 않는다.,
+20,set2,same,형. 같은,Do we all go to the same school?,우리는 모두 같은 학교에 다니니?,
+21,set2,smile,"명. 미소, 웃음",My friend has a great smile.,내 친구는 웃는 모습이 아주 좋다.,
+22,set2,sticky note,"명. 붙임쪽지, 접착식 메모지",I write her phone number on a sticky note.,나는 그녀의 전화번호를 포스트잇에 적는다.,
+23,set2,subject,명. 과목,What's your favorite subject?,네가 가장 좋아하는 과목은 무엇이니?,
+24,set2,tightly,"부 꽉, 단단히",My grandfather holds my hand tightly.,할아버지는 내 손을 꼭 잡으신다.,
+25,set2,twin,형. 쌍둥이의 / 명. 쌍둥이,This is my twin brother Hajun.,이 사람은 내 쌍둥이 형(동생) 하준이다.,
+26,set2,uniform,"명. 제복, 유니폼",This is our uniform.,이것은 우리 교복이다.,
+27,set2,video,명. 동영상,My videos are all about K-food.,내 영상들은 모두 한국 음식에 관한 것이다.,
+28,set2,P.E.,명. 체육,My favorite subject is P.E.,내가 가장 좋아하는 과목은 체육이다.,
+29,set2,get hurt,"다치다, 상처 받다",Children often get hurt.,아이들은 자주 다친다.,
+30,set3,go away,사라지다,I walk. Then my sad feelings go away.,나는 걷는다. 그러면 슬픈 기분이 사라진다.,
+31,set3,survival kit,"생존 키트, 비상용품 세트",You should have a survival kit in your house.,집에 비상 생존 키트를 두는 것이 좋다.,
+32,set3,amazing,형. 놀라운,What an amazing story!,정말 놀라운 이야기다!,
+33,set3,backpack,"명. 배낭, 책가방",He buys a new backpack.,그는 새 배낭을 산다.,
+34,set3,bedtime,명. 취침 시간,My child’s bedtime is ten o’clock.,우리 아이의 취침 시간은 10시다.,
+35,set3,both,대. 둘 다,We both like dogs.,우리는 둘 다 개를 좋아한다.,
+36,set3,coin,명. 동전,Mr. Brown gives a coin to the boy.,브라운 씨는 그 소년에게 동전을 준다.,
+37,set3,comic,명. 만화책 / 형. 웃기는,Sam reads the comics in the newspaper every day.,샘은 매일 신문 만화를 읽는다.,
+38,set3,cute,형. 귀여운,It's so cute.,정말 귀엽다.,
+39,set3,different,형. 다른,Each car is a different color.,각 자동차는 서로 다른 색이다.,
+40,set3,DJ,명. 디제이(라디오나 파티에서 음악을 트는 사람),The DJ plays good music for everyone.,DJ는 모두를 위해 좋은 음악을 틀어 준다.,
+41,set3,empty,형. 비어 있는,The street is empty.,거리가 비어 있다.,
+42,set3,grab,"동. 잡다, 움켜쥐다",I grab my son’s hand and get up.,나는 아들의 손을 잡고 일어난다.,
+43,set3,heavily,"부. 심하게, 많이",It's snowing heavily.,눈이 많이 내리고 있다.,
+44,set4,jacket,명. 재킷,You need a jacket.,너는 재킷이 필요하다.,
+45,set4,later,"부. 후에, 나중에",Give me a call later.,나중에 전화해 줘.,
+46,set4,letter,명. 편지,The girl is sending a letter.,그 소녀는 편지를 보내고 있다.,
+47,set4,loud,형. (소리가) 큰,Loud hip-hop music is coming from Minjun’s smartphone.,민준의 스마트폰에서 시끄러운 힙합 음악이 나오고 있다.,
+48,set4,lucky,형. 운이 좋은,What a lucky him!,그는 정말 운이 좋다!,
+49,set4,lunchbox,명. 도시락,Bring your lunchbox tomorrow.,내일 도시락을 가져와라.,
+50,set4,outside,"부. 밖, 바깥 / 전. ~ 밖에",It's cold and windy outside.,밖은 춥고 바람이 분다.,
+51,set4,perfect,형. 완벽한,Everything's perfect here!,여기 모든 것이 완벽하다!,
+52,set4,practice,명. 연습 / 동. 연습하다,I have soccer practice today.,나는 오늘 축구 연습이 있다.,
+53,set4,present,형. 현재의 / 명. 현재,Do your best in the present.,지금 최선을 다해라.,
+54,set4,rap,명. 랩,Many young people like rap music.,많은 젊은 사람들이 랩 음악을 좋아한다.,
+55,set4,ready,형. 준비가 된,Minjun gets ready for school.,민준이는 학교 갈 준비를 한다.,
+56,set4,record,동. 녹음하다,The man is recording the sounds.,그 남자는 소리를 녹음하고 있다.,
+57,set4,request,"동. 신청하다, 요청하다",I request an interview with the actor.,나는 그 배우와 인터뷰를 요청한다.,
+58,set4,seat,"명. 자리, 좌석",Can I get a window seat?,창가 자리로 받을 수 있을까요?,
+59,set5,share,동. 공유하다,We share information with others.,우리는 다른 사람들과 정보를 공유한다.,
+60,set5,show,"명. 쇼, (라디오) 프로그램 / 동. 보여 주다",We watch a music show on TV.,우리는 TV 음악 프로그램을 본다.,
+61,set5,sometimes,"부. 때때로, 가끔",Sometimes my parents take a walk in the park.,가끔 부모님은 공원에서 산책하신다.,
+62,set5,surf,"동. 서핑을 하다, 검색하다",Minjun turns on the computer and surfs the Internet.,민준이는 컴퓨터를 켜고 인터넷을 한다.,
+63,set5,tablet,명. 태블릿 피시(화면을 터치하는 휴대용 컴퓨터),Many people watch videos on tablets.,많은 사람들이 태블릿으로 영상을 본다.,
+64,set5,tape,명. (녹음∙녹화) 테이프,Her voice on tape is very nice.,녹음된 그녀의 목소리는 매우 좋다.,
+65,set5,weather,명. 날씨,What’s the weather like today?,오늘 날씨는 어떠니?,
+66,set5,webtoon,명. 웹툰,Webtoons are very popular with kids.,웹툰은 아이들에게 매우 인기 있다.,
+67,set5,write,쓰다,Emily writes a new book.,에밀리는 새 책을 쓴다.,
+68,set5,alarm clock,자명종,Turn off the alarm clock.,알람 시계를 꺼라.,
+69,set5,field trip,현장 학습,Turn off the alarm clock.,알람 시계를 꺼라.,
+70,set5,listen to,~을 듣다,She listens to the song.,그녀는 그 노래를 듣는다.,
+71,set5,look at,~을 보다,What is he looking at?,그는 무엇을 보고 있니?,
+72,set5,look out,~의 밖을 내다보다,Look out the window. It’s snowing!,창밖을 봐. 눈이 오고 있어!,
+73,set5,get on,~을 타다,I get on the subway every morning.,나는 매일 아침 지하철을 탄다.,
+74,set6,get ready for,~을 준비하다,It’s time to get ready for work.,일할 준비를 할 시간이다.,
+75,set6,go off,울리다,The siren is going off again.,사이렌이 또 울리고 있다.,
+76,set6,take out,~을 꺼내다,My aunt takes out a pen from her pocket.,이모가 주머니에서 펜을 꺼낸다.,
+77,set6,wait for,~을 기다리다,Let’s wait for the next bus to the airport.,공항으로 가는 다음 버스를 기다리자.,
+78,set6,social media,소셜 미디어,Many people use social media these days.,요즘 많은 사람들이 소셜미디어를 사용한다.,
+79,set6,practice,명. 연습,I have soccer practice until 7.,나는 7시까지 축구 연습이 있다.,
+80,set6,exciting,"형. 신나는, 흥미진진한",The movie was very exciting.,그 영화는 매우 흥미진진했다.,
+81,set6,welcome,"동. 환영하다, 맞이하다",We welcome you to our university.,우리 대학에 오신 것을 환영합니다.,
+82,set6,shout,"동. 소리치다, 외치다",The players are shouting with joy. ,선수들이 기쁨에 외치고 있다.,
+83,set6,believe,동. 믿다,I don't believe the news. ,나는 그 뉴스를 믿지 않는다.,
+84,set6,play fetch,페치(던진 물건 물어 오기 놀이)를 하다,"Every morning, I play fetch with my dog. ",나는 매일 아침 강아지와 공놀이를 한다.,
+85,set6,join,"동. 참여하다, 참가하다",You can join the festival. ,너는 그 축제에 참여할 수 있다.,
+86,set6,silently,부. 조용히,Ms. Jones walked silently with her son. ,존스 씨는 아들과 함께 조용히 걸었다.,
+87,set6,go over,~을 넘다,Many people go over the line.,많은 사람들이 선을 넘는다.,
+88,set7,fence,"명. 울타리, 담장",My uncle is painting the fence behind the house.,우리 삼촌은 집 뒤의 울타리를 칠하고 있다.,
+89,set7,toward,전. ~을 향하여,The boy is swimming toward us.,그 소년은 우리 쪽으로 헤엄치고 있다.,
+90,set7,bump into,~에 부딪치다,I bumped into a door.,나는 문에 부딪혔다.,
+91,set7,fall down,넘어지다,Eric fell down and broke his arm.,에릭은 넘어져 팔이 부러졌다.,
+92,set7,jump into the air,공중으로 뛰어오르다,The children jumped into the air with joy. ,아이들은 기뻐서 공중으로 뛰어올랐다.,
+93,set7,quickly,부. 재빨리,He quickly answered the question.,그는 질문에 빠르게 대답했다.,
+94,set7,pass,"동. (공을) 패스하다, 건네주다",The striker passed the ball to another player.,공격수가 다른 선수에게 공을 패스했다.,
+95,set7,surprised,형. 놀란,I was surprised at his acting.,나는 그의 연기에 놀랐다.,
+96,set7,glad,형. 기쁜,I'm glad to help you. ,너를 도와서 기쁘다.,
+97,set7,excited,"형. 신이 난, 흥분한",The girls are excited about the concert.,그 소녀들은 콘서트 때문에 신이 나 있다.,
+98,set7,call out,외치다,Henry called out to them for help.,헨리는 도움을 요청하며 그들에게 외쳤다.,
+99,set7,against,"전. ~에 맞서, ~에 대항하여",Our classmates played soccer against Class 5. ,우리 반 친구들은 5반과 축구 경기를 했다.,
+100,set7,break,명. 휴식 시간,Get some rest during the break. ,쉬는 시간에 좀 쉬어라.,
+101,set7,carry,"동. 나르다, 옮기다",I can carry your bag. ,내가 네 가방을 들어 줄게.,
+102,set7,lose,동. 잃어버리다,I lost my smartphone. ,나는 스마트폰을 잃어버렸다.,
+103,set7,match,"명. 경기, 시합",I have a soccer match next week. ,나는 다음 주에 축구 경기가 있다.,
+104,set7,order,동. 주문하다,Can you order a drink for me?,나 대신 음료 하나 주문해 줄 수 있니?,
+105,set7,soon,"부. 곧, 머지않아",Her birthday is coming up soon. ,그녀의 생일이 곧 다가온다.,
+106,set7,happen ,"동. 일어나다, 생기다",This must never happen again. ,이런 일은 다시는 일어나면 안 된다.,
+107,set7,hide,"동. 숨기다, 가리다",Don't hide anything from me. ,나에게 아무것도 숨기지 마라.,
+108,set7,bored,형. 지루해하는,The boy looks bored. ,그 소년은 지루해 보인다.,
