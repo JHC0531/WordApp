@@ -148,7 +148,6 @@ def reset_q1_all():
     st.session_state.user_choice_q1 = None
     st.session_state.answered_q1 = False
     st.session_state.solved_q1 = set()
-    st.session_state.remaining_q1 = []
     st.session_state.completed_q1 = False
     st.session_state.solved_current_q1 = False
 
@@ -158,7 +157,6 @@ def reset_q2_all():
     st.session_state.answered_q2 = False
     st.session_state.audio_bytes_q2 = None
     st.session_state.solved_q2 = set()
-    st.session_state.remaining_q2 = []
     st.session_state.completed_q2 = False
     st.session_state.solved_current_q2 = False
 
@@ -167,7 +165,6 @@ def reset_q3_all():
     st.session_state.user_choice_q3 = None
     st.session_state.answered_q3 = False
     st.session_state.solved_q3 = set()
-    st.session_state.remaining_q3 = []
     st.session_state.completed_q3 = False
     st.session_state.solved_current_q3 = False
 
@@ -280,10 +277,10 @@ with tab1:
     if set_choice3 != st.session_state.selected_set:
         st.session_state.selected_set = set_choice3
         cur_df3 = sets[st.session_state.selected_set].copy()
-        st.session_state.remaining_q1 = list(cur_df3["Word"])
-        st.session_state.remaining_q2 = list(cur_df3["Word"])
-        st.session_state.remaining_q3 = list(cur_df3["Word"])
-        reset_all_for_set_change()
+       reset_all_for_set_change()
+st.session_state.remaining_q1 = list(cur_df["Word"])
+st.session_state.remaining_q2 = list(cur_df["Word"])
+st.session_state.remaining_q3 = list(cur_df["Word"])
 
     cur_df3 = sets[st.session_state.selected_set].copy()
     if not st.session_state.remaining_q3:
@@ -373,10 +370,10 @@ with tab2:
         st.session_state.selected_set = set_choice
         # rebuild remaining lists for all tabs
         cur_df = sets[st.session_state.selected_set].copy()
-        st.session_state.remaining_q1 = list(cur_df["Word"])
-        st.session_state.remaining_q2 = list(cur_df["Word"])
-        st.session_state.remaining_q3 = list(cur_df["Word"])
-        reset_all_for_set_change()
+       reset_all_for_set_change()
+st.session_state.remaining_q1 = list(cur_df["Word"])
+st.session_state.remaining_q2 = list(cur_df["Word"])
+st.session_state.remaining_q3 = list(cur_df["Word"])
 
     cur_df = sets[st.session_state.selected_set].copy()
     if not st.session_state.remaining_q1:
@@ -486,10 +483,10 @@ with tab3:
     if set_choice2 != st.session_state.selected_set:
         st.session_state.selected_set = set_choice2
         cur_df2 = sets[st.session_state.selected_set].copy()
-        st.session_state.remaining_q1 = list(cur_df2["Word"])
-        st.session_state.remaining_q2 = list(cur_df2["Word"])
-        st.session_state.remaining_q3 = list(cur_df2["Word"])
         reset_all_for_set_change()
+st.session_state.remaining_q1 = list(cur_df["Word"])
+st.session_state.remaining_q2 = list(cur_df["Word"])
+st.session_state.remaining_q3 = list(cur_df["Word"])
 
     cur_df2 = sets[st.session_state.selected_set].copy()
     if not st.session_state.remaining_q2:
