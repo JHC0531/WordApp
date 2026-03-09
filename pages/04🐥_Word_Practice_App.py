@@ -501,3 +501,50 @@ with tab3:
                         st.session_state.current_q2 = {"word": target_word}
                         st.session_state.audio_bytes_q2 = audio_bytes
                         st.session_state.user_spelling = ""
+                        st.session_state.answered_q2 = False
+                        st.session_state.solved_current_q2 = False
+
+    with col6:
+        if st.button("🔁 초기화 (Reset)", key="reset_q2"):
+            reset_q2_all()
+            st.session_state.remaining_q2 = list(cur_df3["Word"])
+            st.success("이 세트를 초기화했습니다.")
+
+    if st.session_state.completed_q2:
+        st.success("🎉 이 세트의 듣고 쓰기 연습을 모두 완료했습니다! 다시 연습하려면 ‘초기화’를 누르세요.")
+
+    if st.session_state.current_q2 and not st.session_state.completed_q2:
+        q2 = st.session_state.current_q2
+
+        if st.session_state.audio_bytes_q2:
+            st.markdown(audio_html(st.session_state.audio_bytes_q2), unsafe_allow_html=True)
+        else:
+            st.warning("오디오 로드에 문제가 발생했습니다. 다시 시작해 주세요.")
+
+        st.write("")
+        st.markdown("**Q:** 들은 단어(또는 어구)의 스펠링을 입력하세요.")
+        st.session_state.user_spelling = st.text_input(
+            "정답 입력:",
+            value=st.session_state.user_spelling,
+            key="spelling_input",
+            placeholder="예: be good at",
+        )
+
+        if st.button("정답 확인 (Check spelling)", key="check_q2"):
+            user_norm = normalize_answer(st.session_state.user_spelling)
+            correct_norm = normalize_answer(q2["word"])
+            st.session_state.answered_q2 = True
+
+            if user_norm and user_norm == correct_norm:
+                st.success("Correct ✅")
+                st.session_state.solved_q2.add(q2["word"])
+                st.session_state.solved_current_q2 = True
+                remaining_after = [w for w in st.session_state.remaining_q2 if w not in st.session_state.solved_q2]
+                if not remaining_after:
+                    st.session_state.completed_q2 = True
+                    st.balloons()
+            else:
+                st.error(f"Incorrect ❌  |  정답: {q2['word']}")
+
+    if st.session_state.remaining_q2:
+        st.caption(f"진행 상황: {len(st.session_state.solved_q2)}/{len(st.session_state.remaining_q2)} 완료")
