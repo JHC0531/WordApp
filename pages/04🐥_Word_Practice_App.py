@@ -472,12 +472,14 @@ with tab2:
 with tab3:
     st.markdown("#### 1. 세트 선택")
     idx2 = _safe_index(set_names, st.session_state.selected_set)
+
     set_choice2 = st.selectbox(
         "Choose a word set to practice:",
         set_names,
         index=idx2,
         key="set_select_q2",
     )
+
     if set_choice2 != st.session_state.selected_set:
         st.session_state.selected_set = set_choice2
         cur_df2 = sets[st.session_state.selected_set].copy()
