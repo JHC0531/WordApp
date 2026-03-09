@@ -472,7 +472,6 @@ with tab2:
 with tab3:
     st.markdown("#### 1. 세트 선택")
     idx2 = _safe_index(set_names, st.session_state.selected_set)
-
     set_choice2 = st.selectbox(
         "Choose a word set to practice:",
         set_names,
@@ -494,6 +493,7 @@ with tab3:
 
     st.markdown("#### 2. 연습 시작")
     colC, colD = st.columns([1, 1])
+
     with colC:
         if st.button("🍅 Start / Continue", key="start_q2"):
             if st.session_state.completed_q2:
@@ -505,7 +505,7 @@ with tab3:
                         st.session_state.completed_q2 = True
                     else:
                         target_word = random.choice(remaining)
-                        audio_bytes = tts_cached(target_word, lang="en")  # <- cached TTS
+                        audio_bytes = tts_cached(target_word, lang="en")
                         st.session_state.current_q2 = {"word": target_word}
                         st.session_state.audio_bytes_q2 = audio_bytes
                         st.session_state.user_spelling = ""
@@ -524,15 +524,11 @@ with tab3:
     if st.session_state.current_q2 and not st.session_state.completed_q2:
         q2 = st.session_state.current_q2
 
-#        if st.session_state.audio_bytes_q2:
-#            st.audio(st.session_state.audio_bytes_q2, format="audio/mp3")
         if st.session_state.audio_bytes_q2:
             st.markdown(audio_html(st.session_state.audio_bytes_q2), unsafe_allow_html=True)
-
         else:
             st.warning("오디오 로드에 문제가 발생했습니다. 다시 시작해 주세요.")
 
-    
         st.write("")
         st.markdown("**Q:** 들은 단어(또는 어구)의 스펠링을 입력하세요.")
         st.session_state.user_spelling = st.text_input(
@@ -546,6 +542,7 @@ with tab3:
             user_norm = normalize_answer(st.session_state.user_spelling)
             correct_norm = normalize_answer(q2["word"])
             st.session_state.answered_q2 = True
+
             if user_norm and user_norm == correct_norm:
                 st.success("Correct ✅")
                 st.session_state.solved_q2.add(q2["word"])
