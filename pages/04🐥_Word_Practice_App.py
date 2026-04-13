@@ -62,12 +62,14 @@ AUX_MAP = {
 def make_match_pattern(phrase: str) -> re.Pattern:
     ph = phrase.strip()
     parts = ph.split()
+
     if parts and parts[0].lower() in AUX_MAP and len(parts) > 1:
         rest = re.escape(" ".join(parts[1:]))
         head = AUX_MAP[parts[0].lower()]
         pattern = rf"\b{head}\s+{rest}\b"
     else:
         pattern = rf"\b{re.escape(ph)}\b"
+
     return re.compile(pattern, flags=re.IGNORECASE)
 
 
@@ -147,6 +149,8 @@ def reset_q1_all():
     st.session_state.solved_q1 = set()
     st.session_state.completed_q1 = False
     st.session_state.solved_current_q1 = False
+    st.session_state.q1_counter = 0
+    st.session_state.remaining_q1 = []
 
 
 def reset_q2_all():
@@ -157,6 +161,8 @@ def reset_q2_all():
     st.session_state.solved_q2 = set()
     st.session_state.completed_q2 = False
     st.session_state.solved_current_q2 = False
+    st.session_state.q2_counter = 0
+    st.session_state.remaining_q2 = []
 
 
 def reset_q3_all():
@@ -166,6 +172,8 @@ def reset_q3_all():
     st.session_state.solved_q3 = set()
     st.session_state.completed_q3 = False
     st.session_state.solved_current_q3 = False
+    st.session_state.q3_counter = 0
+    st.session_state.remaining_q3 = []
 
 
 def reset_all_for_set_change():
@@ -251,6 +259,9 @@ defaults = {
     "remaining_q3": [],
     "completed_q3": False,
     "solved_current_q3": False,
+    "q1_counter": 0,
+    "q2_counter": 0,
+    "q3_counter": 0,
 }
 
 for key, default in defaults.items():
@@ -258,6 +269,7 @@ for key, default in defaults.items():
         st.session_state[key] = default
 
 current_df = sets[st.session_state.selected_set].copy()
+
 if not st.session_state.remaining_q1:
     st.session_state.remaining_q1 = list(current_df["Word"])
 if not st.session_state.remaining_q2:
@@ -303,11 +315,13 @@ with tab1:
                         meaning = str(row["Meaning"])
                         pool_words = [str(w) for w in cur_df1["Word"].tolist()]
                         options = make_k_options_including_correct(target_word, pool_words, k=5)
+
                         st.session_state.current_q3 = {
                             "word": target_word,
                             "meaning": meaning,
                             "options": options,
                         }
+                        st.session_state.q3_counter += 1
                         st.session_state.user_choice_q3 = None
                         st.session_state.answered_q3 = False
                         st.session_state.solved_current_q3 = False
@@ -323,6 +337,7 @@ with tab1:
 
     if st.session_state.current_q3 and not st.session_state.completed_q3:
         q3 = st.session_state.current_q3
+
         st.markdown("**Q:** 다음 뜻(Meaning)에 알맞은 단어를 고르세요.")
         st.markdown(
             f"<div style='font-size:16px; line-height:1.6'><b>뜻:</b> {q3['meaning']}</div>",
@@ -330,22 +345,24 @@ with tab1:
         )
         st.write("")
 
-        st.session_state.user_choice_q3 = st.radio(
+        selected_q3 = st.radio(
             "정답을 선택하세요:",
             q3["options"],
             index=None,
-            key="mcq_choice_q3",
+            key=f"mcq_choice_q3_{st.session_state.q3_counter}",
         )
 
         if st.button("정답 확인 (Show me the answer)", key="check_q3"):
-            if st.session_state.user_choice_q3 is None:
+            if selected_q3 is None:
                 st.warning("먼저 보기를 선택하세요.")
             else:
                 st.session_state.answered_q3 = True
-                if st.session_state.user_choice_q3 == q3["word"]:
+                if selected_q3 == q3["word"]:
                     st.success("Correct ✅")
                     st.session_state.solved_q3.add(q3["word"])
                     st.session_state.solved_current_q3 = True
+                    st.session_state.current_q3 = None
+
                     remaining_after = [w for w in st.session_state.remaining_q3 if w not in st.session_state.solved_q3]
                     if not remaining_after:
                         st.session_state.completed_q3 = True
@@ -353,9 +370,8 @@ with tab1:
                 else:
                     st.error(f"Incorrect ❌  |  정답: {q3['word']}")
 
-    if st.session_state.remaining_q3:
-        st.caption(f"진행 상황: {len(st.session_state.solved_q3)}/{len(st.session_state.remaining_q3)} 완료")
-
+    total_q3 = len(cur_df1["Word"])
+    st.caption(f"진행 상황: {len(st.session_state.solved_q3)}/{total_q3} 완료")
 
 # -------------------------------------------------
 # Tab 2: 문장 속 단어
@@ -397,6 +413,7 @@ with tab2:
                         masked = mask_phrase(sentence, target_word)
                         pool_words = [str(w) for w in cur_df2["Word"].tolist()]
                         options = make_mcq_options(target_word, pool_words, k_distractors=3)
+
                         st.session_state.current_q1 = {
                             "word": target_word,
                             "sentence": sentence,
@@ -404,6 +421,7 @@ with tab2:
                             "translation": translation,
                             "options": options,
                         }
+                        st.session_state.q1_counter += 1
                         st.session_state.user_choice_q1 = None
                         st.session_state.answered_q1 = False
                         st.session_state.solved_current_q1 = False
@@ -419,6 +437,7 @@ with tab2:
 
     if st.session_state.current_q1 and not st.session_state.completed_q1:
         q1 = st.session_state.current_q1
+
         st.markdown("**Q:** 다음 문장의 의미로 보아 빈칸에 들어갈 가장 적절한 단어는?")
         st.markdown(
             f"<div style='font-size:16px; line-height:1.6'><b>문장:</b> {q1['masked']}</div>",
@@ -430,22 +449,24 @@ with tab2:
         )
         st.write("")
 
-        st.session_state.user_choice_q1 = st.radio(
+        selected_q1 = st.radio(
             "정답을 선택하세요:",
             q1["options"],
             index=None,
-            key="mcq_choice_q1",
+            key=f"mcq_choice_q1_{st.session_state.q1_counter}",
         )
 
         if st.button("정답 확인 (Show me the answer)", key="check_q1"):
-            if st.session_state.user_choice_q1 is None:
+            if selected_q1 is None:
                 st.warning("먼저 보기를 선택하세요.")
             else:
                 st.session_state.answered_q1 = True
-                if st.session_state.user_choice_q1 == q1["word"]:
+                if selected_q1 == q1["word"]:
                     st.success("Correct ✅")
                     st.session_state.solved_q1.add(q1["word"])
                     st.session_state.solved_current_q1 = True
+                    st.session_state.current_q1 = None
+
                     remaining_after = [w for w in st.session_state.remaining_q1 if w not in st.session_state.solved_q1]
                     if not remaining_after:
                         st.session_state.completed_q1 = True
@@ -453,7 +474,7 @@ with tab2:
                 else:
                     st.error(f"Incorrect ❌  |  정답: {q1['word']}")
 
-        if st.session_state.answered_q1:
+        if st.session_state.answered_q1 and st.session_state.current_q1 is not None:
             highlighted = highlight_phrase(q1["sentence"], q1["word"])
             st.markdown("**원문 표시:**")
             st.markdown(
@@ -461,9 +482,8 @@ with tab2:
                 unsafe_allow_html=True,
             )
 
-    if st.session_state.remaining_q1:
-        st.caption(f"진행 상황: {len(st.session_state.solved_q1)}/{len(st.session_state.remaining_q1)} 완료")
-
+    total_q1 = len(cur_df2["Word"])
+    st.caption(f"진행 상황: {len(st.session_state.solved_q1)}/{total_q1} 완료")
 
 # -------------------------------------------------
 # Tab 3: 듣고 스펠링
@@ -505,6 +525,7 @@ with tab3:
                             audio_bytes = None
 
                         st.session_state.current_q2 = {"word": target_word}
+                        st.session_state.q2_counter += 1
                         st.session_state.audio_bytes_q2 = audio_bytes
                         st.session_state.user_spelling = ""
                         st.session_state.answered_q2 = False
@@ -529,15 +550,16 @@ with tab3:
 
         st.write("")
         st.markdown("**Q:** 들은 단어(또는 어구)의 스펠링을 입력하세요.")
-        st.session_state.user_spelling = st.text_input(
+
+        typed_q2 = st.text_input(
             "정답 입력:",
-            value=st.session_state.user_spelling,
-            key="spelling_input",
+            value="",
+            key=f"spelling_input_{st.session_state.q2_counter}",
             placeholder="예: be good at",
         )
 
         if st.button("정답 확인 (Check spelling)", key="check_q2"):
-            user_norm = normalize_answer(st.session_state.user_spelling)
+            user_norm = normalize_answer(typed_q2)
             correct_norm = normalize_answer(q2["word"])
             st.session_state.answered_q2 = True
 
@@ -545,6 +567,8 @@ with tab3:
                 st.success("Correct ✅")
                 st.session_state.solved_q2.add(q2["word"])
                 st.session_state.solved_current_q2 = True
+                st.session_state.current_q2 = None
+
                 remaining_after = [w for w in st.session_state.remaining_q2 if w not in st.session_state.solved_q2]
                 if not remaining_after:
                     st.session_state.completed_q2 = True
@@ -552,5 +576,5 @@ with tab3:
             else:
                 st.error(f"Incorrect ❌  |  정답: {q2['word']}")
 
-    if st.session_state.remaining_q2:
-        st.caption(f"진행 상황: {len(st.session_state.solved_q2)}/{len(st.session_state.remaining_q2)} 완료")
+    total_q2 = len(cur_df3["Word"])
+    st.caption(f"진행 상황: {len(st.session_state.solved_q2)}/{total_q2} 완료")
