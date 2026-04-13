@@ -16,17 +16,24 @@ st.set_page_config(page_title="Word Practice")
 # -------------------------------------------------
 # Data
 # -------------------------------------------------
-CSV_URL = "https://raw.githubusercontent.com/jihyeon0531/WordApp/refs/heads/main/data/2025_Ch6_8_0819.csv"
+CSV_URL = "https://raw.githubusercontent.com/jihyeon0531/WordApp/main/data/2025_Ch6_8_0819.csv"
 # Expected columns: Set, Word, Meaning, Sentence, Translation
 
 
 @st.cache_data(ttl=300)
 def load_data(url: str) -> pd.DataFrame:
-    df = pd.read_csv(url)
+    try:
+        df = pd.read_csv(url)
+    except Exception as e:
+        st.error(f"CSV를 불러오지 못했습니다: {e}")
+        st.stop()
+
     needed = ["Word", "Meaning", "Sentence", "Translation", "Set"]
     for col in needed:
         if col not in df.columns:
-            raise ValueError(f"CSV is missing required column: {col}")
+            st.error(f"CSV is missing required column: {col}")
+            st.stop()
+
     return df[["Set", "Word", "Meaning", "Sentence", "Translation"]].copy()
 
 
@@ -250,7 +257,6 @@ for key, default in defaults.items():
     if key not in st.session_state:
         st.session_state[key] = default
 
-# 첫 실행 시 remaining 채우기
 current_df = sets[st.session_state.selected_set].copy()
 if not st.session_state.remaining_q1:
     st.session_state.remaining_q1 = list(current_df["Word"])
