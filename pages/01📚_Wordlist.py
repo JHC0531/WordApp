@@ -17,7 +17,7 @@ tab1, tab2 = st.tabs(["🐾 1. 설명페이지", "🐋 2. Word list"])
 with tab1:
     st.write("단어 학습 어플리케이션 (Word learning App)")
     st.markdown("""
-        🐣 위쪽 두 번째 탭에는 총 87개 단어가 뜻, 문장 예시, 문장 해석 등이 함께 있습니다 :-)
+        🐣 위쪽 두 번째 탭에는 총 108개 단어가 뜻, 문장 예시, 문장 해석 등이 함께 있습니다 :-)
 
         시작하려면 왼쪽 메뉴에서 학습앱(Learning APP) 또는 연습앱(Practice APP)을 클릭하세요.
 
