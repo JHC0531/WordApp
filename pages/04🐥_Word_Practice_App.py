@@ -170,18 +170,6 @@ def audio_html(audio_bytes: bytes, mime: str = "audio/mp3") -> str:
 # -------------------------------------------------
 # State resetters
 # -------------------------------------------------
-def clear_feedback():
-    st.session_state.feedback_q1 = None
-    st.session_state.feedback_q2 = None
-    st.session_state.feedback_q3 = None
-    st.session_state.last_correct_q1 = None
-    st.session_state.last_correct_q2 = None
-    st.session_state.last_correct_q3 = None
-    st.session_state.show_answer_q1 = False
-    st.session_state.show_answer_q2 = False
-    st.session_state.show_answer_q3 = False
-
-
 def reset_q1_all():
     st.session_state.current_q1 = None
     st.session_state.solved_q1 = set()
@@ -260,6 +248,7 @@ def generate_next_q3(cur_df: pd.DataFrame):
     if not remaining:
         st.session_state.completed_q3 = True
         st.session_state.current_q3 = None
+        st.session_state.show_answer_q3 = False
         return
 
     target_word = random.choice(remaining)
@@ -284,6 +273,7 @@ def generate_next_q1(cur_df: pd.DataFrame):
     if not remaining:
         st.session_state.completed_q1 = True
         st.session_state.current_q1 = None
+        st.session_state.show_answer_q1 = False
         return
 
     target_word = random.choice(remaining)
@@ -312,6 +302,7 @@ def generate_next_q2(cur_df: pd.DataFrame):
     if not remaining:
         st.session_state.completed_q2 = True
         st.session_state.current_q2 = None
+        st.session_state.show_answer_q2 = False
         return
 
     target_word = random.choice(remaining)
@@ -420,12 +411,14 @@ with tab1:
                 st.info("이 세트의 모든 문항을 완료했습니다. ‘초기화’로 다시 시작할 수 있어요.")
             elif st.session_state.current_q3 is None:
                 generate_next_q3(cur_df1)
+                st.rerun()
 
     with col2:
         if st.button("🔁 초기화 (Reset)", key="reset_q3"):
             reset_q3_all()
             st.session_state.remaining_q3 = list(cur_df1["Word"])
             st.success("이 세트를 초기화했습니다.")
+            st.rerun()
 
     if st.session_state.feedback_q3 == "correct":
         st.success(f"Correct ✅  |  정답: {st.session_state.last_correct_q3}")
@@ -458,14 +451,17 @@ with tab1:
                 st.session_state.feedback_q3 = "correct"
                 st.session_state.last_correct_q3 = q3["word"]
                 st.session_state.show_answer_q3 = True
+                st.rerun()
             else:
                 st.session_state.feedback_q3 = "incorrect"
                 st.session_state.last_correct_q3 = q3["word"]
                 st.session_state.show_answer_q3 = True
+                st.rerun()
 
         if st.session_state.show_answer_q3:
             if st.button("➡️ 다음 문제", key="next_q3"):
                 generate_next_q3(cur_df1)
+                st.rerun()
 
     total_q3 = len(cur_df1["Word"])
     st.caption(f"진행 상황: {len(st.session_state.solved_q3)}/{total_q3} 완료")
@@ -500,12 +496,14 @@ with tab2:
                 st.info("이 세트의 모든 문항을 완료했습니다. ‘초기화’로 다시 시작할 수 있어요.")
             elif st.session_state.current_q1 is None:
                 generate_next_q1(cur_df2)
+                st.rerun()
 
     with col4:
         if st.button("🔁 초기화 (Reset)", key="reset_q1"):
             reset_q1_all()
             st.session_state.remaining_q1 = list(cur_df2["Word"])
             st.success("이 세트를 초기화했습니다.")
+            st.rerun()
 
     if st.session_state.feedback_q1 == "correct":
         st.success(f"Correct ✅  |  정답: {st.session_state.last_correct_q1}")
@@ -543,10 +541,12 @@ with tab2:
                 st.session_state.feedback_q1 = "correct"
                 st.session_state.last_correct_q1 = q1["word"]
                 st.session_state.show_answer_q1 = True
+                st.rerun()
             else:
                 st.session_state.feedback_q1 = "incorrect"
                 st.session_state.last_correct_q1 = q1["word"]
                 st.session_state.show_answer_q1 = True
+                st.rerun()
 
         if st.session_state.show_answer_q1:
             highlighted = highlight_phrase(q1["sentence"], q1["word"])
@@ -558,6 +558,7 @@ with tab2:
 
             if st.button("➡️ 다음 문제", key="next_q1"):
                 generate_next_q1(cur_df2)
+                st.rerun()
 
     total_q1 = len(cur_df2["Word"])
     st.caption(f"진행 상황: {len(st.session_state.solved_q1)}/{total_q1} 완료")
@@ -592,12 +593,14 @@ with tab3:
                 st.info("이 세트의 모든 문항을 완료했습니다. ‘초기화’로 다시 시작할 수 있어요.")
             elif st.session_state.current_q2 is None:
                 generate_next_q2(cur_df3)
+                st.rerun()
 
     with col6:
         if st.button("🔁 초기화 (Reset)", key="reset_q2"):
             reset_q2_all()
             st.session_state.remaining_q2 = list(cur_df3["Word"])
             st.success("이 세트를 초기화했습니다.")
+            st.rerun()
 
     if st.session_state.feedback_q2 == "correct":
         st.success(f"Correct ✅  |  정답: {st.session_state.last_correct_q2}")
@@ -631,14 +634,17 @@ with tab3:
                 st.session_state.feedback_q2 = "correct"
                 st.session_state.last_correct_q2 = q2["word"]
                 st.session_state.show_answer_q2 = True
+                st.rerun()
             else:
                 st.session_state.feedback_q2 = "incorrect"
                 st.session_state.last_correct_q2 = q2["word"]
                 st.session_state.show_answer_q2 = True
+                st.rerun()
 
         if st.session_state.show_answer_q2:
             if st.button("➡️ 다음 문제", key="next_q2"):
                 generate_next_q2(cur_df3)
+                st.rerun()
 
     total_q2 = len(cur_df3["Word"])
     st.caption(f"진행 상황: {len(st.session_state.solved_q2)}/{total_q2} 완료")
