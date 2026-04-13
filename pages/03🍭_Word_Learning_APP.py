@@ -18,7 +18,7 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",  # <-- ensure it's open on load
 )
-st.markdown("### 🐥 단어 학습 어플리케이션 (Word learning App)")
+st.markdown("### 🍭 단어 학습 어플리케이션 (Word learning App)")
 # ---------------- Data ----------------
 CSV_URL = "https://raw.githubusercontent.com/jihyeon0531/WordApp/refs/heads/main/data/2025_Ch6_8_0819.csv"
 df = pd.read_csv(CSV_URL)
