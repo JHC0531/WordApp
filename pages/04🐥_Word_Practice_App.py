@@ -62,13 +62,11 @@ def make_match_pattern(phrase: str) -> re.Pattern:
     ph = str(phrase).strip()
     parts = ph.split()
 
-    # multi-word auxiliary phrase: be good at / do homework / have breakfast
     if parts and parts[0].lower() in AUX_MAP and len(parts) > 1:
         rest = r"\s+".join(re.escape(p) for p in parts[1:])
         head = AUX_MAP[parts[0].lower()]
         pattern = rf"(?i)(?<!\w){head}\s+{rest}(?!\w)"
     else:
-        # allow flexible spaces, avoid strict \b failure on phrases/punctuation
         escaped = r"\s+".join(re.escape(p) for p in parts) if parts else re.escape(ph)
         pattern = rf"(?i)(?<!\w){escaped}(?!\w)"
 
@@ -95,7 +93,6 @@ def mask_phrase(sentence: str, phrase: str) -> str:
     if n > 0:
         return masked
 
-    # fallback for phrases not matched by regex
     return _simple_mask_fallback(sentence, phrase)
 
 
@@ -173,32 +170,50 @@ def audio_html(audio_bytes: bytes, mime: str = "audio/mp3") -> str:
 # -------------------------------------------------
 # State resetters
 # -------------------------------------------------
+def clear_feedback():
+    st.session_state.feedback_q1 = None
+    st.session_state.feedback_q2 = None
+    st.session_state.feedback_q3 = None
+    st.session_state.last_correct_q1 = None
+    st.session_state.last_correct_q2 = None
+    st.session_state.last_correct_q3 = None
+    st.session_state.show_answer_q1 = False
+    st.session_state.show_answer_q2 = False
+    st.session_state.show_answer_q3 = False
+
+
 def reset_q1_all():
     st.session_state.current_q1 = None
-    st.session_state.answered_q1 = False
     st.session_state.solved_q1 = set()
     st.session_state.completed_q1 = False
     st.session_state.q1_counter = 0
     st.session_state.remaining_q1 = []
+    st.session_state.feedback_q1 = None
+    st.session_state.last_correct_q1 = None
+    st.session_state.show_answer_q1 = False
 
 
 def reset_q2_all():
     st.session_state.current_q2 = None
-    st.session_state.answered_q2 = False
     st.session_state.audio_bytes_q2 = None
     st.session_state.completed_q2 = False
     st.session_state.solved_q2 = set()
     st.session_state.q2_counter = 0
     st.session_state.remaining_q2 = []
+    st.session_state.feedback_q2 = None
+    st.session_state.last_correct_q2 = None
+    st.session_state.show_answer_q2 = False
 
 
 def reset_q3_all():
     st.session_state.current_q3 = None
-    st.session_state.answered_q3 = False
-    st.session_state.solved_q3 = set()
     st.session_state.completed_q3 = False
+    st.session_state.solved_q3 = set()
     st.session_state.q3_counter = 0
     st.session_state.remaining_q3 = []
+    st.session_state.feedback_q3 = None
+    st.session_state.last_correct_q3 = None
+    st.session_state.show_answer_q3 = False
 
 
 def reset_all_for_set_change():
@@ -259,7 +274,9 @@ def generate_next_q3(cur_df: pd.DataFrame):
         "options": options,
     }
     st.session_state.q3_counter += 1
-    st.session_state.answered_q3 = False
+    st.session_state.feedback_q3 = None
+    st.session_state.last_correct_q3 = None
+    st.session_state.show_answer_q3 = False
 
 
 def generate_next_q1(cur_df: pd.DataFrame):
@@ -285,7 +302,9 @@ def generate_next_q1(cur_df: pd.DataFrame):
         "options": options,
     }
     st.session_state.q1_counter += 1
-    st.session_state.answered_q1 = False
+    st.session_state.feedback_q1 = None
+    st.session_state.last_correct_q1 = None
+    st.session_state.show_answer_q1 = False
 
 
 def generate_next_q2(cur_df: pd.DataFrame):
@@ -304,7 +323,9 @@ def generate_next_q2(cur_df: pd.DataFrame):
     st.session_state.current_q2 = {"word": target_word}
     st.session_state.audio_bytes_q2 = audio_bytes
     st.session_state.q2_counter += 1
-    st.session_state.answered_q2 = False
+    st.session_state.feedback_q2 = None
+    st.session_state.last_correct_q2 = None
+    st.session_state.show_answer_q2 = False
 
 
 # -------------------------------------------------
@@ -331,24 +352,30 @@ if "selected_set" not in st.session_state:
 
 defaults = {
     "current_q1": None,
-    "answered_q1": False,
     "solved_q1": set(),
     "remaining_q1": [],
     "completed_q1": False,
     "current_q2": None,
-    "answered_q2": False,
     "audio_bytes_q2": None,
     "solved_q2": set(),
     "remaining_q2": [],
     "completed_q2": False,
     "current_q3": None,
-    "answered_q3": False,
     "solved_q3": set(),
     "remaining_q3": [],
     "completed_q3": False,
     "q1_counter": 0,
     "q2_counter": 0,
     "q3_counter": 0,
+    "feedback_q1": None,
+    "feedback_q2": None,
+    "feedback_q3": None,
+    "last_correct_q1": None,
+    "last_correct_q2": None,
+    "last_correct_q3": None,
+    "show_answer_q1": False,
+    "show_answer_q2": False,
+    "show_answer_q3": False,
 }
 
 for key, default in defaults.items():
@@ -391,16 +418,19 @@ with tab1:
         if st.button("🍅 Start / Continue", key="start_q3"):
             if st.session_state.completed_q3:
                 st.info("이 세트의 모든 문항을 완료했습니다. ‘초기화’로 다시 시작할 수 있어요.")
-            else:
+            elif st.session_state.current_q3 is None:
                 generate_next_q3(cur_df1)
-                st.rerun()
 
     with col2:
         if st.button("🔁 초기화 (Reset)", key="reset_q3"):
             reset_q3_all()
             st.session_state.remaining_q3 = list(cur_df1["Word"])
             st.success("이 세트를 초기화했습니다.")
-            st.rerun()
+
+    if st.session_state.feedback_q3 == "correct":
+        st.success(f"Correct ✅  |  정답: {st.session_state.last_correct_q3}")
+    elif st.session_state.feedback_q3 == "incorrect":
+        st.error(f"Incorrect ❌  |  정답: {st.session_state.last_correct_q3}")
 
     if st.session_state.completed_q3:
         st.success("🎉 이 세트의 단어-뜻 연습을 모두 완료했습니다!")
@@ -425,10 +455,17 @@ with tab1:
                 st.warning("먼저 보기를 선택하세요.")
             elif selected_q3 == q3["word"]:
                 st.session_state.solved_q3.add(q3["word"])
-                generate_next_q3(cur_df1)
-                st.rerun()
+                st.session_state.feedback_q3 = "correct"
+                st.session_state.last_correct_q3 = q3["word"]
+                st.session_state.show_answer_q3 = True
             else:
-                st.error(f"Incorrect ❌  |  정답: {q3['word']}")
+                st.session_state.feedback_q3 = "incorrect"
+                st.session_state.last_correct_q3 = q3["word"]
+                st.session_state.show_answer_q3 = True
+
+        if st.session_state.show_answer_q3:
+            if st.button("➡️ 다음 문제", key="next_q3"):
+                generate_next_q3(cur_df1)
 
     total_q3 = len(cur_df1["Word"])
     st.caption(f"진행 상황: {len(st.session_state.solved_q3)}/{total_q3} 완료")
@@ -461,16 +498,19 @@ with tab2:
         if st.button("🍅 Start / Continue", key="start_q1"):
             if st.session_state.completed_q1:
                 st.info("이 세트의 모든 문항을 완료했습니다. ‘초기화’로 다시 시작할 수 있어요.")
-            else:
+            elif st.session_state.current_q1 is None:
                 generate_next_q1(cur_df2)
-                st.rerun()
 
     with col4:
         if st.button("🔁 초기화 (Reset)", key="reset_q1"):
             reset_q1_all()
             st.session_state.remaining_q1 = list(cur_df2["Word"])
             st.success("이 세트를 초기화했습니다.")
-            st.rerun()
+
+    if st.session_state.feedback_q1 == "correct":
+        st.success(f"Correct ✅  |  정답: {st.session_state.last_correct_q1}")
+    elif st.session_state.feedback_q1 == "incorrect":
+        st.error(f"Incorrect ❌  |  정답: {st.session_state.last_correct_q1}")
 
     if st.session_state.completed_q1:
         st.success("🎉 이 세트의 문장 속 단어 연습을 모두 완료했습니다!")
@@ -500,16 +540,24 @@ with tab2:
                 st.warning("먼저 보기를 선택하세요.")
             elif selected_q1 == q1["word"]:
                 st.session_state.solved_q1.add(q1["word"])
-                generate_next_q1(cur_df2)
-                st.rerun()
+                st.session_state.feedback_q1 = "correct"
+                st.session_state.last_correct_q1 = q1["word"]
+                st.session_state.show_answer_q1 = True
             else:
-                st.error(f"Incorrect ❌  |  정답: {q1['word']}")
-                highlighted = highlight_phrase(q1["sentence"], q1["word"])
-                st.markdown("**원문 표시:**")
-                st.markdown(
-                    f"<div style='font-size:16px; line-height:1.6'>{highlighted}</div>",
-                    unsafe_allow_html=True,
-                )
+                st.session_state.feedback_q1 = "incorrect"
+                st.session_state.last_correct_q1 = q1["word"]
+                st.session_state.show_answer_q1 = True
+
+        if st.session_state.show_answer_q1:
+            highlighted = highlight_phrase(q1["sentence"], q1["word"])
+            st.markdown("**원문 표시:**")
+            st.markdown(
+                f"<div style='font-size:16px; line-height:1.6'>{highlighted}</div>",
+                unsafe_allow_html=True,
+            )
+
+            if st.button("➡️ 다음 문제", key="next_q1"):
+                generate_next_q1(cur_df2)
 
     total_q1 = len(cur_df2["Word"])
     st.caption(f"진행 상황: {len(st.session_state.solved_q1)}/{total_q1} 완료")
@@ -542,16 +590,19 @@ with tab3:
         if st.button("🍅 Start / Continue", key="start_q2"):
             if st.session_state.completed_q2:
                 st.info("이 세트의 모든 문항을 완료했습니다. ‘초기화’로 다시 시작할 수 있어요.")
-            else:
+            elif st.session_state.current_q2 is None:
                 generate_next_q2(cur_df3)
-                st.rerun()
 
     with col6:
         if st.button("🔁 초기화 (Reset)", key="reset_q2"):
             reset_q2_all()
             st.session_state.remaining_q2 = list(cur_df3["Word"])
             st.success("이 세트를 초기화했습니다.")
-            st.rerun()
+
+    if st.session_state.feedback_q2 == "correct":
+        st.success(f"Correct ✅  |  정답: {st.session_state.last_correct_q2}")
+    elif st.session_state.feedback_q2 == "incorrect":
+        st.error(f"Incorrect ❌  |  정답: {st.session_state.last_correct_q2}")
 
     if st.session_state.completed_q2:
         st.success("🎉 이 세트의 듣고 쓰기 연습을 모두 완료했습니다!")
@@ -577,10 +628,17 @@ with tab3:
 
             if user_norm and user_norm == correct_norm:
                 st.session_state.solved_q2.add(q2["word"])
-                generate_next_q2(cur_df3)
-                st.rerun()
+                st.session_state.feedback_q2 = "correct"
+                st.session_state.last_correct_q2 = q2["word"]
+                st.session_state.show_answer_q2 = True
             else:
-                st.error(f"Incorrect ❌  |  정답: {q2['word']}")
+                st.session_state.feedback_q2 = "incorrect"
+                st.session_state.last_correct_q2 = q2["word"]
+                st.session_state.show_answer_q2 = True
+
+        if st.session_state.show_answer_q2:
+            if st.button("➡️ 다음 문제", key="next_q2"):
+                generate_next_q2(cur_df3)
 
     total_q2 = len(cur_df3["Word"])
     st.caption(f"진행 상황: {len(st.session_state.solved_q2)}/{total_q2} 완료")
