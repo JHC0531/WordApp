@@ -33,7 +33,34 @@ def load_data(url: str) -> pd.DataFrame:
             st.error(f"CSV is missing required column: {col}")
             st.stop()
 
-    return df[["Set", "Word", "Meaning", "Sentence", "Translation"]].copy()
+    df = df[["Set", "Word", "Meaning", "Sentence", "Translation"]].copy()
+
+    # 문자열화 + 결측치 처리
+    for col in ["Set", "Word", "Meaning", "Sentence", "Translation"]:
+        df[col] = df[col].fillna("").astype(str)
+
+    # 줄바꿈/공백 정리
+    for col in ["Set", "Word", "Meaning", "Sentence", "Translation"]:
+        df[col] = (
+            df[col]
+            .str.replace(r"[\r\n]+", " ", regex=True)
+            .str.replace(r"\s+", " ", regex=True)
+            .str.strip()
+        )
+
+    # set 이름 정규화
+    df["Set"] = df["Set"].str.lower()
+
+    # 빈 행 제거
+    df = df[
+        (df["Set"] != "") &
+        (df["Word"] != "") &
+        (df["Meaning"] != "") &
+        (df["Sentence"] != "") &
+        (df["Translation"] != "")
+    ].reset_index(drop=True)
+
+    return df
 
 
 def build_sets(df: pd.DataFrame) -> Dict[str, pd.DataFrame]:
@@ -41,10 +68,15 @@ def build_sets(df: pd.DataFrame) -> Dict[str, pd.DataFrame]:
         m = re.search(r"\d+", str(val))
         return int(m.group()) if m else float("inf")
 
-    groups = sorted(df.groupby("Set"), key=lambda kv: _set_sort_key(kv[0]))
+    clean_df = df.copy()
+    clean_df["Set"] = clean_df["Set"].astype(str).str.strip().str.lower()
+
+    groups = sorted(clean_df.groupby("Set"), key=lambda kv: _set_sort_key(kv[0]))
     result = {}
     for set_name, g in groups:
-        result[str(set_name)] = g.reset_index(drop=True)
+        g = g.reset_index(drop=True)
+        if len(g) > 0:
+            result[str(set_name)] = g
     return result
 
 
