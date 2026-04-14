@@ -11,7 +11,7 @@ from gtts import gTTS
 # -------------------------------------------------
 # Config
 # -------------------------------------------------
-st.set_page_config(page_title="Word Practice")
+st.set_page_config(page_title="Word Practice - Debug")
 
 # -------------------------------------------------
 # Data
@@ -35,11 +35,9 @@ def load_data(url: str) -> pd.DataFrame:
 
     df = df[["Set", "Word", "Meaning", "Sentence", "Translation"]].copy()
 
-    # 문자열화 + 결측치 처리
     for col in ["Set", "Word", "Meaning", "Sentence", "Translation"]:
         df[col] = df[col].fillna("").astype(str)
 
-    # 줄바꿈/공백 정리
     for col in ["Set", "Word", "Meaning", "Sentence", "Translation"]:
         df[col] = (
             df[col]
@@ -48,10 +46,8 @@ def load_data(url: str) -> pd.DataFrame:
             .str.strip()
         )
 
-    # set 이름 정규화
     df["Set"] = df["Set"].str.lower()
 
-    # 빈 행 제거
     df = df[
         (df["Set"] != "") &
         (df["Word"] != "") &
@@ -80,9 +76,6 @@ def build_sets(df: pd.DataFrame) -> Dict[str, pd.DataFrame]:
     return result
 
 
-# -------------------------------------------------
-# Text utilities
-# -------------------------------------------------
 AUX_MAP = {
     "be": r"(?:am|is|are|was|were|be|being|been)",
     "have": r"(?:have|has|had|having)",
@@ -109,22 +102,18 @@ def _simple_mask_fallback(sentence: str, phrase: str) -> str:
     blank = "<span style='border-bottom:2px solid #222;'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>"
     low_sentence = sentence.lower()
     low_phrase = phrase.lower().strip()
-
     idx = low_sentence.find(low_phrase)
     if idx != -1:
         return sentence[:idx] + blank + sentence[idx + len(phrase):]
-
     return sentence
 
 
 def mask_phrase(sentence: str, phrase: str) -> str:
     pat = make_match_pattern(phrase)
     blank = "<span style='border-bottom:2px solid #222;'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>"
-
     masked, n = pat.subn(blank, sentence, count=1)
     if n > 0:
         return masked
-
     return _simple_mask_fallback(sentence, phrase)
 
 
@@ -169,13 +158,9 @@ def highlight_phrase(sentence: str, phrase: str, color: str = "orange") -> str:
     if idx != -1:
         orig = sentence[idx: idx + len(phrase)]
         return sentence[:idx] + f"<span style='color:{color}; font-weight:bold'>{orig}</span>" + sentence[idx + len(phrase):]
-
     return sentence
 
 
-# -------------------------------------------------
-# Audio
-# -------------------------------------------------
 def tts_mp3(word: str, lang: str = "en") -> bytes:
     tts = gTTS(text=word, lang=lang)
     buf = io.BytesIO()
@@ -199,9 +184,6 @@ def audio_html(audio_bytes: bytes, mime: str = "audio/mp3") -> str:
     """
 
 
-# -------------------------------------------------
-# Reset helpers
-# -------------------------------------------------
 def reset_q1_all():
     st.session_state.current_q1 = None
     st.session_state.solved_q1 = set()
@@ -256,9 +238,6 @@ def change_set(new_set: str, sets: Dict[str, pd.DataFrame]):
     fill_remaining_words(cur_df)
 
 
-# -------------------------------------------------
-# Load data
-# -------------------------------------------------
 df = load_data(CSV_URL)
 sets = build_sets(df)
 set_names = list(sets.keys())
@@ -272,9 +251,6 @@ def _safe_index(names: List[str], selected: Optional[str]) -> int:
     return names.index(selected) if selected in names else 0
 
 
-# -------------------------------------------------
-# Question generators
-# -------------------------------------------------
 def generate_next_q1(cur_df: pd.DataFrame):
     remaining = [w for w in st.session_state.remaining_q1 if w not in st.session_state.solved_q1]
     if not remaining:
@@ -352,9 +328,6 @@ def generate_next_q3(cur_df: pd.DataFrame):
     st.session_state.show_answer_q3 = False
 
 
-# -------------------------------------------------
-# Init state
-# -------------------------------------------------
 if "selected_set" not in st.session_state:
     st.session_state.selected_set = set_names[0]
 
@@ -399,10 +372,17 @@ if not st.session_state.remaining_q2:
 if not st.session_state.remaining_q3:
     st.session_state.remaining_q3 = list(current_df["Word"])
 
-# -------------------------------------------------
-# Title + selectors
-# -------------------------------------------------
-st.markdown("### 🐥 단어 연습 앱 (Word Practice App)")
+st.markdown("### 🐥 단어 연습 앱 (Debug Version)")
+
+# -------------------- DEBUG --------------------
+with st.expander("디버그 정보 보기"):
+    st.write("정규화 후 Set 목록:", sorted(df["Set"].unique().tolist()))
+    st.write("Set별 문항 수:")
+    st.write(df.groupby("Set").size())
+    st.write("현재 선택된 세트:", st.session_state.selected_set)
+    st.write("현재 세트 미리보기:")
+    st.dataframe(sets[st.session_state.selected_set].head(10))
+# -----------------------------------------------
 
 selected_set = st.selectbox(
     "Choose a word set to practice:",
@@ -427,9 +407,6 @@ practice = st.radio(
     key="active_practice",
 )
 
-# -------------------------------------------------
-# Practice 1
-# -------------------------------------------------
 if practice == "Practice 1: 단어-뜻 연습":
     st.markdown("#### 단어-뜻 연습")
 
@@ -459,7 +436,6 @@ if practice == "Practice 1: 단어-뜻 연습":
 
     if st.session_state.current_q1 and not st.session_state.completed_q1:
         q1 = st.session_state.current_q1
-
         st.markdown(f"**뜻:** {q1['meaning']}")
 
         selected_q1 = st.radio(
@@ -491,9 +467,6 @@ if practice == "Practice 1: 단어-뜻 연습":
 
     st.caption(f"진행 상황: {len(st.session_state.solved_q1)}/{len(cur_df)} 완료")
 
-# -------------------------------------------------
-# Practice 2
-# -------------------------------------------------
 elif practice == "Practice 2: 문장 속 단어":
     st.markdown("#### 문장 속 단어")
 
@@ -569,9 +542,6 @@ elif practice == "Practice 2: 문장 속 단어":
 
     st.caption(f"진행 상황: {len(st.session_state.solved_q2)}/{len(cur_df)} 완료")
 
-# -------------------------------------------------
-# Practice 3
-# -------------------------------------------------
 elif practice == "Practice 3: 스펠링연습":
     st.markdown("#### 스펠링연습")
 
