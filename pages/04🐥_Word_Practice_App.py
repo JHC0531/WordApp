@@ -136,11 +136,7 @@ def highlight_phrase(sentence: str, phrase: str, color: str = "orange") -> str:
     idx = low_sentence.find(low_phrase)
     if idx != -1:
         orig = sentence[idx: idx + len(phrase)]
-        return (
-            sentence[:idx]
-            + f"<span style='color:{color}; font-weight:bold'>{orig}</span>"
-            + sentence[idx + len(phrase):]
-        )
+        return sentence[:idx] + f"<span style='color:{color}; font-weight:bold'>{orig}</span>" + sentence[idx + len(phrase):]
 
     return sentence
 
@@ -187,9 +183,8 @@ def reset_q1_all():
 
 def reset_q2_all():
     st.session_state.current_q2 = None
-    st.session_state.audio_bytes_q2 = None
-    st.session_state.completed_q2 = False
     st.session_state.solved_q2 = set()
+    st.session_state.completed_q2 = False
     st.session_state.q2_counter = 0
     st.session_state.remaining_q2 = []
     st.session_state.feedback_q2 = None
@@ -199,8 +194,9 @@ def reset_q2_all():
 
 def reset_q3_all():
     st.session_state.current_q3 = None
-    st.session_state.completed_q3 = False
+    st.session_state.audio_bytes_q3 = None
     st.session_state.solved_q3 = set()
+    st.session_state.completed_q3 = False
     st.session_state.q3_counter = 0
     st.session_state.remaining_q3 = []
     st.session_state.feedback_q3 = None
@@ -306,6 +302,7 @@ def generate_next_q3(cur_df: pd.DataFrame):
     if not remaining:
         st.session_state.completed_q3 = True
         st.session_state.current_q3 = None
+        st.session_state.audio_bytes_q3 = None
         st.session_state.show_answer_q3 = False
         return
 
@@ -355,6 +352,7 @@ defaults = {
     "show_answer_q1": False,
     "show_answer_q2": False,
     "show_answer_q3": False,
+    "active_practice": "Practice 1: 단어-뜻 연습",
 }
 
 for key, default in defaults.items():
@@ -370,10 +368,9 @@ if not st.session_state.remaining_q3:
     st.session_state.remaining_q3 = list(current_df["Word"])
 
 # -------------------------------------------------
-# Title + shared set selector
+# Title + selectors
 # -------------------------------------------------
 st.markdown("### 🐥 단어 연습 앱 (Word Practice App)")
-st.markdown("#### 세트 선택")
 
 selected_set = st.selectbox(
     "Choose a word set to practice:",
@@ -386,25 +383,23 @@ if selected_set != st.session_state.selected_set:
     change_set(selected_set, sets)
     st.rerun()
 
-# current set df
 cur_df = sets[st.session_state.selected_set].copy()
 
-# -------------------------------------------------
-# Tabs
-# -------------------------------------------------
-tab1, tab2, tab3 = st.tabs(
+practice = st.radio(
+    "Choose practice type:",
     [
-        "1️⃣ Practice 1: 단어-뜻 연습",
-        "2️⃣ Practice 2: 문장 속 단어",
-        "3️⃣ Practice 3: 스펠링연습",
-    ]
+        "Practice 1: 단어-뜻 연습",
+        "Practice 2: 문장 속 단어",
+        "Practice 3: 스펠링연습",
+    ],
+    key="active_practice",
 )
 
 # -------------------------------------------------
-# Tab 1: 단어-뜻 연습
+# Practice 1
 # -------------------------------------------------
-with tab1:
-    st.markdown("#### 1. 연습 시작")
+if practice == "Practice 1: 단어-뜻 연습":
+    st.markdown("#### 단어-뜻 연습")
 
     col1, col2 = st.columns([1, 1])
 
@@ -420,7 +415,6 @@ with tab1:
         if st.button("🔁 초기화 (Reset)", key="reset_q1"):
             reset_q1_all()
             st.session_state.remaining_q1 = list(cur_df["Word"])
-            st.success("이 세트를 초기화했습니다.")
             st.rerun()
 
     if st.session_state.feedback_q1 == "correct":
@@ -434,11 +428,7 @@ with tab1:
     if st.session_state.current_q1 and not st.session_state.completed_q1:
         q1 = st.session_state.current_q1
 
-        st.markdown("**Q:** 다음 뜻(Meaning)에 알맞은 단어를 고르세요.")
-        st.markdown(
-            f"<div style='font-size:16px; line-height:1.6'><b>뜻:</b> {q1['meaning']}</div>",
-            unsafe_allow_html=True,
-        )
+        st.markdown(f"**뜻:** {q1['meaning']}")
 
         selected_q1 = st.radio(
             "정답을 선택하세요:",
@@ -447,7 +437,7 @@ with tab1:
             key=f"mcq_choice_q1_{st.session_state.q1_counter}",
         )
 
-        if st.button("정답 확인 (Show me the answer)", key="check_q1"):
+        if st.button("정답 확인", key="check_q1"):
             if selected_q1 is None:
                 st.warning("먼저 보기를 선택하세요.")
             elif selected_q1 == q1["word"]:
@@ -467,19 +457,17 @@ with tab1:
                 generate_next_q1(cur_df)
                 st.rerun()
 
-    total_q1 = len(cur_df["Word"])
-    st.caption(f"진행 상황: {len(st.session_state.solved_q1)}/{total_q1} 완료")
-
+    st.caption(f"진행 상황: {len(st.session_state.solved_q1)}/{len(cur_df)} 완료")
 
 # -------------------------------------------------
-# Tab 2: 문장 속 단어
+# Practice 2
 # -------------------------------------------------
-with tab2:
-    st.markdown("#### 1. 연습 시작")
+elif practice == "Practice 2: 문장 속 단어":
+    st.markdown("#### 문장 속 단어")
 
-    col3, col4 = st.columns([1, 1])
+    col1, col2 = st.columns([1, 1])
 
-    with col3:
+    with col1:
         if st.button("🍅 Start / Continue", key="start_q2"):
             if st.session_state.completed_q2:
                 st.info("이 세트의 모든 문항을 완료했습니다. ‘초기화’로 다시 시작할 수 있어요.")
@@ -487,11 +475,10 @@ with tab2:
                 generate_next_q2(cur_df)
                 st.rerun()
 
-    with col4:
+    with col2:
         if st.button("🔁 초기화 (Reset)", key="reset_q2"):
             reset_q2_all()
             st.session_state.remaining_q2 = list(cur_df["Word"])
-            st.success("이 세트를 초기화했습니다.")
             st.rerun()
 
     if st.session_state.feedback_q2 == "correct":
@@ -505,7 +492,6 @@ with tab2:
     if st.session_state.current_q2 and not st.session_state.completed_q2:
         q2 = st.session_state.current_q2
 
-        st.markdown("**Q:** 다음 문장의 의미로 보아 빈칸에 들어갈 가장 적절한 단어는?")
         st.markdown(
             f"<div style='font-size:16px; line-height:1.6'><b>문장:</b> {q2['masked']}</div>",
             unsafe_allow_html=True,
@@ -522,7 +508,7 @@ with tab2:
             key=f"mcq_choice_q2_{st.session_state.q2_counter}",
         )
 
-        if st.button("정답 확인 (Show me the answer)", key="check_q2"):
+        if st.button("정답 확인", key="check_q2"):
             if selected_q2 is None:
                 st.warning("먼저 보기를 선택하세요.")
             elif selected_q2 == q2["word"]:
@@ -549,19 +535,17 @@ with tab2:
                 generate_next_q2(cur_df)
                 st.rerun()
 
-    total_q2 = len(cur_df["Word"])
-    st.caption(f"진행 상황: {len(st.session_state.solved_q2)}/{total_q2} 완료")
-
+    st.caption(f"진행 상황: {len(st.session_state.solved_q2)}/{len(cur_df)} 완료")
 
 # -------------------------------------------------
-# Tab 3: 듣고 스펠링
+# Practice 3
 # -------------------------------------------------
-with tab3:
-    st.markdown("#### 1. 연습 시작")
+elif practice == "Practice 3: 스펠링연습":
+    st.markdown("#### 스펠링연습")
 
-    col5, col6 = st.columns([1, 1])
+    col1, col2 = st.columns([1, 1])
 
-    with col5:
+    with col1:
         if st.button("🍅 Start / Continue", key="start_q3"):
             if st.session_state.completed_q3:
                 st.info("이 세트의 모든 문항을 완료했습니다. ‘초기화’로 다시 시작할 수 있어요.")
@@ -569,11 +553,10 @@ with tab3:
                 generate_next_q3(cur_df)
                 st.rerun()
 
-    with col6:
+    with col2:
         if st.button("🔁 초기화 (Reset)", key="reset_q3"):
             reset_q3_all()
             st.session_state.remaining_q3 = list(cur_df["Word"])
-            st.success("이 세트를 초기화했습니다.")
             st.rerun()
 
     if st.session_state.feedback_q3 == "correct":
@@ -599,7 +582,7 @@ with tab3:
             placeholder="예: be good at",
         )
 
-        if st.button("정답 확인 (Check spelling)", key="check_q3"):
+        if st.button("정답 확인", key="check_q3"):
             user_norm = normalize_answer(typed_q3)
             correct_norm = normalize_answer(q3["word"])
 
@@ -620,5 +603,4 @@ with tab3:
                 generate_next_q3(cur_df)
                 st.rerun()
 
-    total_q3 = len(cur_df["Word"])
-    st.caption(f"진행 상황: {len(st.session_state.solved_q3)}/{total_q3} 완료")
+    st.caption(f"진행 상황: {len(st.session_state.solved_q3)}/{len(cur_df)} 완료")
