@@ -525,7 +525,7 @@ if current_index >= total_words:
                 # Learning App 파일명을 확정하면
                 # 아래 코드로 바로 이동시킬 수 있음.
                 #
-                # st.switch_page(
+                # st.switch_page("pages/03🎀_Word_Learning_APP.py")
                 #     "pages/2_Learning_App.py"
                 # )
 
