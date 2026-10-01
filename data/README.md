@@ -5,6 +5,7 @@
 
 ```text
 data/wordlist_1001.csv
+
 | Column | Description |
 |---|---|
 | `word_id` | 각 단어의 고유 ID |
