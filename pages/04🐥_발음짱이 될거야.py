@@ -1,348 +1,803 @@
-The following image can be moved on the page using keyboard controls (left, right, up, down)
-이전 메시지 불러오는 중…
-
-붙여넣은 텍스트(1)(1).txt
-문서
-응, 이게 내가 필요했던 전체 Artifact 코드야. 이제 04🐥_발음짱이 될거야.py로 옮길 수 있어.
-
-코드를 확인해보니 현재 버전은 꽤 잘 만들어져 있어. 강아지 콩이 애니메이션, 유닛별 돌다리, Web Speech API를 이용한 Chrome 음성인식, 정답/재시도 피드백, 결과 화면까지 이미 구현되어 있어. 
- 
-
-다만 그대로 Streamlit에 붙이면 안 되는 부분이 두 군데 있어.
-
-첫째, 지금은 127개 단어가 JavaScript의 WORDS_RAW 안에 통째로 박혀 있어. 
- 이건 우리가 이미 만든 data/wordlist_1001.csv와 중복이야. 따라서 Practice App에서는 이 목록을 없애고 CSV + 학생이 Word List에서 📦 보관한 단어를 Python에서 읽어서 콩이 앱에 전달하도록 바꾸는 게 좋아.
-
-둘째, 맨 아래의 window.claude.hot... 부분은 Claude Artifact 안에서 상태를 보존하기 위한 코드라서 Streamlit에서는 필요 없어. 
- 이 부분은 제거해야 해.
-
-그래서 최종 흐름을 이렇게 만들면 돼:
-
-01🐱 Word List
-→ 학생이 📦 보관할래요
-
-03🎀 Word Learning
-→ 듣기 + 의미 회상
-→ ⭐ 다시 볼래요
-
-04🐥 발음짱이 될거야
-→ 📦 보관한 단어만 콩이와 발음 연습
-→ Chrome 음성인식
-→ “내가 들은 말” 표시
-→ 성공하면 🎉 강아지 반응
-→ 틀리면 다시 발음
-→ 결과
-
-그리고 현재 코드에서 발음 판정은 단순히 음성인식 결과와 목표 단어를 비교하는 방식이야. 
- 이건 네 연구에서 사용할 때 중요한 점이야. 엄밀한 발음 정확도 점수라기보다는 ASR가 목표 단어로 인식했는지 여부라고 보는 게 맞아.
-
-지금부터 네가 할 일
-아직 GitHub에서 코드 건드리지 마.
-
-내가 다음 단계에서 pages/04🐥_발음짱이 될거야.py 전체 코드를 통째로 만들어 줄게. 복사해서 GitHub에 붙여넣기만 하면 되게 할 수 있어.
-
-이번에는 원래 Claude 디자인을 최대한 그대로 살리면서 다음처럼 바꿀 거야.
-
-wordlist_1001.csv 자동 연결
-Word List의 saved_words 자동 연결
-learning_unit을 그대로 받아서 Practice 들어가자마자 해당 Unit 시작
-원하면 ⭐ 다시 볼 단어만 연습 선택 가능
-127개를 JS에 다시 입력하지 않음
-Claude 전용 코드 제거
-강아지 콩이 SVG/애니메이션 유지
-Chrome 마이크 발음인식 유지
-기존 Google Form 연결도 유지
-학생이 별도로 Unit을 또 고르지 않아도 되게 만들 수 있음
-특히 네 앱 흐름을 생각하면 Practice App에 들어갔는데 또 “어느 유닛부터 건너볼까?”를 묻는 건 조금 중복이야. Word List에서 이미 Unit과 단어를 골랐으니까, 나는 03🎀 Word Learning → 04🐥 Practice로 넘어갈 때 그 Unit + 보관한 단어가 바로 콩이 앞에 나타나는 방식을 추천해.
-
-예를 들어 Unit 6에서 20개 중 13개를 보관했다면 Practice 화면은 바로:
-
-🐶 콩이
-Unit 6 · 13 words
-
-진행 1 / 13
-
-“이 단어를 나한테 말해줘! 🎧”
-
-astronaut
-우주 비행사
-I want to be an astronaut in the future.
-
-🎙️ 눌러서 말해보세요
-
-이렇게 시작하도록 만들면 돼.
-
-그리고 네가 준 원본에는 Google Form 주소와 nameEntry, scoreEntry 값도 이미 들어가 있어. 
- 그 부분도 살려둘 수 있어.
-
-이제 내가 04🐥_발음짱이 될거야.py 완성본을 통째로 만들어주면 돼.
-
-근데 발음은 굳이 저장한 단어를 안해도될거같은게... 애들이 의미를 아는 단어도 발음 연습을 계속 해야해. 별로 정확하지않거든
-맞아. 그러면 발음 Practice는 saved_words와 분리하는 게 더 자연스러워.
-
-📦 보관한 단어는 “뜻이나 형태를 더 공부해야 하는 단어”이고, 발음은 뜻을 이미 아는 단어라도 반복해서 말해볼 필요가 있기 때문이야. 특히 네 앱 목적이 어휘+발음 학습이라면, 이 둘을 같은 필터로 묶지 않는 편이 좋아.
-
-그래서 Practice App은 이렇게 가는 걸 추천해:
-
-기본: 선택한 Unit의 전체 단어
-선택 옵션:
-전체 단어 연습
-⭐ 다시 볼 단어만 연습
-Word List의 📦 보관한 단어는 Practice App에서는 굳이 강제하지 않음
-즉 흐름은 이렇게 분리돼.
-
-Word List
-→ “이 단어의 뜻/형태를 더 공부할 필요가 있나?”
-
-Word Learning
-→ 의미·형태·소리 학습
-
-발음짱이 될거야
-→ “이 단어를 실제로 정확하게 말할 수 있나?”
-
-이게 연구적으로도 더 깔끔해. 현재 Artifact의 발음 Practice는 원래부터 Unit 전체를 대상으로 하고 있고, Unit을 고르면 그 Unit 전체 단어를 state.words로 불러오도록 되어 있어. 
- 그래서 이 구조를 유지하는 편이 오히려 원래 설계와 잘 맞아.
-
-다만 한 가지는 바꾸는 게 좋아. 지금 Artifact 안에 127개 단어가 직접 박혀 있으니까, 그건 없애고 data/wordlist_1001.csv에서 Unit 전체 단어를 자동으로 가져오도록 바꾸자. 그러면 나중에 CSV를 고쳐도 Practice App이 같이 업데이트돼.
-
-내가 만들 최종 04🐥_발음짱이 될거야.py는 이렇게 할 수 있어:
-
-🐶 멍멍 발음 친구
-
-[ Unit 4 ] [ Unit 5 ] [ Unit 6 ]
-[ Unit 7 ] [ SR 1 ]   [ SR 2 ]
-
-선택: Unit 6
-
-진행 1 / 20
-
-🐶 콩이
-"이 단어를 나한테 말해줘!"
-
-presentation
-발표
-When is your presentation about your dream job?
-
-🎙️ 눌러서 말해보세요
-그리고 성공하면:
-
-🐶🎉
-멍멍! 정확해요!
-
-내가 들은 말:
-"presentation"
-
-정확해요! 잘 말했어요 👏
-
-[ 다음 단어 ▶ ]
-이 방향으로 가면 돼. 발음 Practice는 Unit 전체 단어 기준으로 만들자. saved_words와 연결하지 않겠다.
-
-그래. 그리고 현재 코드에서 발음 판정은 단순히 음성인식 결과와 목표 단어를 비교하는 방식이야.    붙여넣은 텍스트(1) 이건 네 연구에서 사용할 때 중요한 점이야. 엄밀한 발음 정확도 점수라기보다는 ASR가 목표 단어로 인식했는지 여부라고 보는 게 맞아.  이 부분에서...아이들이 asr시스템에서 인식되는 단어 갯수로 아이들의 발음 성적을 측정하는 게 객관적으로 타당하니?
-
-객관성은 어느 정도 확보할 수 있지만, “ASR가 목표 단어로 인식한 개수 = 발음 능력 점수”라고 그대로 쓰는 건 타당도가 충분하다고 보기 어려워. 더 정확하게는 ASR recognition rate를 ‘발음 명료도(intelligibility)의 행동 지표/대리 지표(proxy)’로 사용하는 것이 적절해.
-
-네 현재 코드의 판정 방식은 학생 발화를 ASR가 텍스트로 변환한 뒤, 그 결과가 목표 단어와 일치하는지를 보는 구조야. 즉 음향적으로 얼마나 원어민처럼 발음했는지를 직접 분석하는 게 아니라, ASR 시스템이 그 발화를 목표 단어로 알아들을 수 있었는지를 측정하고 있어. 현재 코드도 실제로 transcript와 target을 정규화한 뒤 일치 여부를 판단해. 
-
-이 방식에는 장점이 분명해. 모든 학생에게 같은 알고리즘을 적용하니 교사 평정처럼 평가자 간 편차가 없고, 수십 명의 학생을 반복 측정하기도 쉽고, 학습자에게 즉각적 피드백을 줄 수 있어. 최근 메타분석에서도 ASR 기반 발음 학습은 전반적으로 긍정적인 효과를 보였고, 특히 분절음 수준의 발음 개선에서 효과가 더 크게 나타났다. 
-
-하지만 객관적이라는 것과 타당하다는 것은 다른 문제야. ASR는 원래 “사람의 발음을 평가하기 위해” 만들어진 시스템이 아니라 대개 “무슨 말을 했는지 인식하기 위해” 만들어진 시스템이야. 그래서 상당히 알아들을 만한 발음이어도 ASR가 틀리게 인식할 수 있고, 반대로 실제로는 어색하거나 오류가 있는 발음인데 문맥이나 모델의 예측 때문에 목표 단어로 인식할 수도 있어. 최근 EFL ASR 연구 리뷰도 ASR 연구가 주로 segmental/word-level accuracy에 집중되어 있고, intelligibility나 comprehensibility를 얼마나 잘 반영하는지에 대해서는 아직 근거가 충분하지 않다고 지적해. 
-
-특히 네 대상이 한국 중학생이라는 점도 중요해. 2025년 한국의 어린 EFL 학습자를 대상으로 한 자동 발음평가 연구에서도 음소 위치 등에 따라 자동평가 결과가 달라지고, 자동화된 도구에 정확도 한계와 잠재적 편향이 있을 수 있다고 보고했어. 
-
-그래서 논문에서는 측정변수를 이렇게 정의하는 게 가장 안전해.
-
-ASR recognition rate: the proportion of target words correctly recognized by the ASR system following learners’ oral production.
-
-그리고 이것을
-
-a behavioral proxy for pronunciation intelligibility
-
-라고 부르는 거야.
-
-반대로 pronunciation accuracy score, pronunciation proficiency, objective pronunciation score처럼 쓰면 심사에서 “ASR recognition이 실제 발음 정확도를 얼마나 타당하게 반영하느냐?”라는 질문을 받을 가능성이 커.
-
-네 연구에서는 오히려 이걸 잘 활용할 수 있어. 예를 들어 20개 목표 단어 중 ASR가 14개를 목표 단어로 인식했다면:
-
-ASR Recognition Rate
-=
-14
-20
-×
-100
-=
-70
-%
-ASR Recognition Rate= 
-20
-14
-​
- ×100=70%
-이 점수는 **“학생의 발음 정확도가 70점”이라는 뜻이 아니라, “20개의 산출 중 70%가 ASR 시스템에 의해 의도한 단어로 성공적으로 인식되었다”**는 뜻이야.
-
-그리고 pre/post에서 동일한 단어, 동일한 ASR, 동일한 조건을 사용하면 절대적인 발음 수준 판정보다 변화량을 비교하는 데 훨씬 더 설득력이 있어. 예를 들어 사전 45% → 사후 75%라면 “발음이 객관적으로 30점 향상됐다”고 쓰기보다는 **“ASR recognition rate increased from 45% to 75%”**라고 쓰는 게 맞아.
-
-더 강한 연구 설계를 원한다면, 나는 **ASR recognition rate + 사람 평가의 소규모 타당화(subsample validation)**를 추천해. 모든 172명의 모든 음성을 사람이 채점할 필요는 없어. 예를 들어 표본 일부의 발음을 2명의 영어교사 또는 훈련된 평가자가 intelligibility/comprehensibility 기준으로 독립 평가하고, 그 점수와 ASR recognition 결과의 관계를 확인하면 네 ASR 지표의 convergent validity 근거를 훨씬 강하게 만들 수 있어. ASR 연구에서도 phonetic distance뿐 아니라 인간의 accentedness/comprehensibility 평가를 함께 사용한 사례가 있어. 
-
-그래서 네 연구라면 측정 구조를 이렇게 잡는 게 가장 방어가 잘 돼.
-
-주요 양적 지표: ASR target-word recognition rate (%)
-해석: pronunciation intelligibility의 행동적 proxy
-보조 타당화: 일부 발화에 대한 인간 평가와의 일치/상관
-피해야 할 표현: “ASR pronunciation accuracy score = 학생의 실제 발음 정확도”
-
-그리고 앱 자체에서도 지금처럼 정답 13개라고 표시하기보다는 연구 관점에서는 “콩이가 알아들은 단어 13개” 같은 표현이 더 정확할 수도 있어. 학생에게도 “네 발음이 틀렸다”가 아니라 **“이번에는 이렇게 들렸어요 / 다시 말해볼까요?”**라고 피드백하는 현재 구조가 오히려 측정 개념과 잘 맞아. 현재 코드도 실패 시 “조금 다르게 들렸어요”라고 표현하고 있어서 방향은 좋아. 
-
-한 가지 더 중요한 점이 있어. 현재 앱은 학생에게 목표 단어를 화면에 보여준 상태에서 말하게 하고 있고, ASR가 그 단어를 인식했는지를 본다. 따라서 논문에서는 이걸 자유발화 능력이나 전반적 발음 능력으로 확장해서 해석하지 말고, controlled word-production task에서의 ASR recognizability로 한정하는 게 가장 정확해. 이 정도로 정의하면 네 연구의 pronunciation outcome으로 충분히 사용할 수 있어. 
-
-원한다면 다음에는 내가 논문의 Instruments/Measures 부분에 그대로 넣을 수 있는 “ASR-based pronunciation measure” 영문 문단까지 학술적으로 써줄 수 있어.
-
-그래 그럼 일단 그렇게 코드 만들어보자.
-
-26s 동안 처리함
-좋아. 그러면 발음 Practice는 Word List의 보관 여부와 완전히 분리하고, 학생이 고른 Unit의 전체 단어를 연습하도록 만들자.
-
-또 화면에서는 정답이나 발음 점수라고 하지 않고 **“콩이가 알아들은 단어”**라고 표시하도록 바꿀게. 실제 판정도 기존 Artifact처럼 ASR이 학생 발화를 텍스트로 바꾼 뒤 목표 단어와 일치하는지를 확인하는 방식이야. 
-
-먼저 GitHub에서 pages/04🐥_발음짱이 될거야.py를 열고 기존 내용을 전부 삭제한 뒤 아래 코드를 통째로 붙여넣어. 이 버전은 data/wordlist_1001.csv를 직접 읽기 때문에 127개 단어를 코드 안에 다시 적을 필요가 없어.
-
 import streamlit as st
-    return df
+import pandas as pd
+import json
+import streamlit.components.v1 as components
 
+st.set_page_config(
+    page_title="발음짱이 될거야",
+    page_icon="🐥",
+    layout="centered"
+)
+
+@st.cache_data
+def load_words():
+    df = pd.read_csv("data/wordlist_1001.csv")
+    df = df.fillna("")
+
+    required_columns = [
+        "word_id",
+        "unit",
+        "word",
+        "meaning",
+        "example",
+        "pronunciation_caution",
+    ]
+
+    missing = [c for c in required_columns if c not in df.columns]
+    if missing:
+        raise ValueError(f"CSV에 다음 열이 없습니다: {missing}")
+
+    return df
 
 try:
     df = load_words()
-
 except Exception as e:
     st.error("단어 파일을 불러오지 못했어요.")
     st.code(str(e))
     st.stop()
 
-# =========================================================
-# CONVERT CSV -> JAVASCRIPT DATA
-# =========================================================
-
 word_data = []
-
 for _, row in df.iterrows():
-
     word_data.append({
         "id": str(row["word_id"]),
-        "unit": str(row["unit"]),
-        "text": str(row["word"]),
-        "meaning": str(row["meaning"]),
-        "example": str(row["example"]),
-        "caution": str(row["pronunciation_caution"])
+        "u": str(row["unit"]),
+        "t": str(row["word"]),
+        "m": str(row["meaning"]),
+        "e": str(row["example"]),
+        "caution": str(row["pronunciation_caution"]),
     })
 
-WORDS_JSON = json.dumps(
-    word_data,
-    ensure_ascii=False
-)
+WORDS_JSON = json.dumps(word_data, ensure_ascii=False)
 
-# =========================================================
-# GOOGLE FORM
-# =========================================================
-#
-# 기존 Claude Artifact에 있던 Google Form 값을 그대로 넣었어요.
-# 나중에 연구 기록 방식을 바꾸고 싶으면 이 부분만 수정하면 됩니다.
-#
+practice_html = r"""<title>멍멍 발음 친구</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Jua&family=Noto+Sans+KR:wght@400;500;700;900&display=swap">
+<style>
+  :root{
+    --bg:#FFF8EE;
+    --surface:#FFFFFF;
+    --surface-2:#FFF1DC;
+    --ink:#3A2E27;
+    --ink-soft:#8A7A6B;
+    --accent:#FF9A4D;
+    --accent-dark:#E67E2E;
+    --accent-ink:#5A2E0A;
+    --sky:#4FB6E0;
+    --success:#3FAE68;
+    --success-soft:#DFF5E6;
+    --miss:#E8825C;
+    --miss-soft:#FDEAE1;
+    --line:#F0DEC5;
+    --shadow:rgba(58,46,39,0.14);
+    --water-a:#CDEFF8;
+    --water-b:#9FDCEE;
+    --water-c:#5FB6D9;
+    --stone:#A3907C;
+    --stone-dark:#7C6A58;
+    --stone-ink:#FFF8EE;
+    --lily:#4FAE6E;
+    --dog-fur:#E8A765;
+    --dog-fur-dark:#C9823E;
+    --dog-eye:#17120F;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#20180F;
+      --surface:#2C2116;
+      --surface-2:#38291A;
+      --ink:#F6ECDD;
+      --ink-soft:#C4AF9A;
+      --accent:#FFA75C;
+      --accent-dark:#FFB979;
+      --accent-ink:#2E1704;
+      --sky:#6FCBEF;
+      --success:#6BCB8D;
+      --success-soft:#22392A;
+      --miss:#F0987A;
+      --miss-soft:#3B2A21;
+      --line:#493725;
+      --shadow:rgba(0,0,0,0.45);
+      --water-a:#123042;
+      --water-b:#184358;
+      --water-c:#1F5A78;
+      --stone:#6B5B4C;
+      --stone-dark:#493D32;
+      --stone-ink:#FFEFDC;
+      --lily:#3E8F5C;
+      --dog-fur:#F0BD7E;
+      --dog-fur-dark:#D4934E;
+      --dog-eye:#17120F;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#20180F;
+    --surface:#2C2116;
+    --surface-2:#38291A;
+    --ink:#F6ECDD;
+    --ink-soft:#C4AF9A;
+    --accent:#FFA75C;
+    --accent-dark:#FFB979;
+    --accent-ink:#2E1704;
+    --sky:#6FCBEF;
+    --success:#6BCB8D;
+    --success-soft:#22392A;
+    --miss:#F0987A;
+    --miss-soft:#3B2A21;
+    --line:#493725;
+    --shadow:rgba(0,0,0,0.45);
+    --water-a:#123042;
+    --water-b:#184358;
+    --water-c:#1F5A78;
+    --stone:#6B5B4C;
+    --stone-dark:#493D32;
+    --stone-ink:#FFEFDC;
+    --lily:#3E8F5C;
+    --dog-fur:#F0BD7E;
+    --dog-fur-dark:#D4934E;
+    --dog-eye:#17120F;
+  }
 
-FORM_URL = (
-    "https://docs.google.com/forms/d/e/"
-    "1FAIpQLScO37vlswQSm6N-mqx1w5VrYeCnsao1JVlK-WqzJME82imV-A/viewform"
-)
+  *{box-sizing:border-box;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Noto Sans KR',system-ui,sans-serif;
+    padding-inline:16px;
+    padding-block:20px;
+    display:flex;
+    justify-content:center;
+  }
+  .page{
+    width:100%;
+    max-width:460px;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+  }
 
-FORM_NAME_ENTRY = "entry.1598372142"
-FORM_SCORE_ENTRY = "entry.1041762124"
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-family:'Jua',sans-serif;
+    font-size:18px;
+    color:var(--accent-dark);
+    min-width:0;
+  }
+  .brand svg{width:26px;height:26px;flex:none;}
+  .brand-text{display:flex;flex-direction:column;line-height:1.15;min-width:0;}
+  .brand-sub{font-family:'Noto Sans KR',sans-serif;font-weight:500;font-size:11px;color:var(--ink-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .score{
+    font-family:'Baloo 2',sans-serif;
+    font-weight:700;
+    font-size:14px;
+    background:var(--surface-2);
+    color:var(--accent-ink);
+    padding:6px 12px;
+    border-radius:999px;
+    font-variant-numeric:tabular-nums;
+    flex:none;
+    white-space:nowrap;
+  }
 
-# =========================================================
-# HTML / CSS / JAVASCRIPT
-# =========================================================
+  .progress-wrap{display:flex;flex-direction:column;gap:4px;}
+  .progress-row{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;color:var(--ink-soft);}
+  .progress-row b{font-family:'Baloo 2',sans-serif;color:var(--ink);font-variant-numeric:tabular-nums;}
+  .progress-track{height:8px;border-radius:999px;background:var(--surface-2);overflow:hidden;}
+  .progress-fill{height:100%;background:var(--accent);border-radius:999px;transition:width .3s ease;}
+  .finish-link{
+    align-self:flex-end;
+    background:none;border:none;
+    font-size:12px;
+    color:var(--ink-soft);
+    text-decoration:underline;
+    cursor:pointer;
+    padding:2px 0;
+  }
+  .finish-link:focus-visible{outline:2px solid var(--sky);outline-offset:2px;}
+  .progress-links{display:flex;gap:12px;}
 
-practice_html = f"""
-<!DOCTYPE html>
-<html lang="ko">
+  .pond-view{display:flex;flex-direction:column;gap:14px;}
+  .pond{
+    position:relative;
+    background:linear-gradient(165deg,var(--water-a),var(--water-b) 55%,var(--water-c));
+    border-radius:32px;
+    padding:28px 18px 34px;
+    overflow:hidden;
+    box-shadow:0 8px 24px var(--shadow);
+  }
+  .lily{position:absolute;border-radius:50%;background:var(--lily);opacity:.4;}
+  .ripple{position:absolute;border:2px solid rgba(255,255,255,.45);border-radius:50%;}
+  .pond-path{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:8px;}
+  .stone{
+    font-family:'Jua',sans-serif;
+    font-size:13px;
+    line-height:1.2;
+    white-space:pre-line;
+    text-align:center;
+    color:var(--stone-ink);
+    background:linear-gradient(160deg,var(--stone),var(--stone-dark));
+    border:none;
+    border-radius:48% 52% 50% 50% / 58% 46% 54% 42%;
+    width:92px;
+    min-height:58px;
+    padding:6px 8px;
+    box-shadow:0 5px 0 var(--stone-dark), 0 9px 16px rgba(0,0,0,.2);
+    cursor:pointer;
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .stone:hover{transform:translateY(-3px);}
+  .stone:active{transform:translateY(3px);box-shadow:0 2px 0 var(--stone-dark);}
+  .stone:focus-visible{outline:3px solid var(--accent);outline-offset:3px;}
+  .pond-hint{text-align:center;font-size:12px;color:var(--ink-soft);margin:0;}
+  .back-link{
+    align-self:center;
+    background:none;border:none;
+    font-size:13px;color:var(--ink-soft);
+    text-decoration:underline;cursor:pointer;padding:4px 0;
+  }
+  .back-link:focus-visible{outline:2px solid var(--sky);outline-offset:2px;}
 
-<head>
+  .stage{
+    position:relative;
+    background:linear-gradient(180deg,var(--surface-2),var(--surface));
+    border-radius:28px;
+    padding:20px 16px 6px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    box-shadow:0 8px 24px var(--shadow);
+    overflow:hidden;
+  }
+  .speech-bubble{
+    font-family:'Jua',sans-serif;
+    font-size:14px;
+    line-height:1.5;
+    color:var(--ink);
+    background:var(--surface);
+    border:2px solid var(--line);
+    border-radius:18px;
+    padding:10px 14px;
+    max-width:300px;
+    text-align:center;
+    position:relative;
+    margin-bottom:6px;
+    min-height:1.5em;
+  }
+  .speech-bubble::after{
+    content:"";
+    position:absolute;
+    left:50%;
+    bottom:-9px;
+    transform:translateX(-50%);
+    border-width:9px 8px 0 8px;
+    border-style:solid;
+    border-color:var(--surface) transparent transparent transparent;
+    filter:drop-shadow(0 1px 0 var(--line));
+  }
 
-<meta charset="UTF-8">
+  .dog-wrap{position:relative;width:200px;height:200px;}
+  .dog-svg{width:100%;height:100%;overflow:visible;}
+  [hidden]{display:none!important;}
 
-<meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
->
+  .ear{transform-box:fill-box;transform-origin:top center;transition:transform .25s ease;}
+  .dog-wrap[data-state="listening"] .ear-left{animation:earPerk 1s ease-in-out infinite alternate;}
+  .dog-wrap[data-state="listening"] .ear-right{animation:earPerk 1s ease-in-out infinite alternate-reverse;}
+  @keyframes earPerk{ from{transform:rotate(0deg) scale(1);} to{transform:rotate(-8deg) scale(1.03);} }
 
-<title>멍멍 발음 친구</title>
+  .tail{transform-box:fill-box;transform-origin:20% 60%;}
+  .dog-wrap[data-state="idle"] .tail{animation:tailSway 2.6s ease-in-out infinite;}
+  .dog-wrap[data-state="happy"] .tail{animation:tailWag .28s ease-in-out infinite;}
+  .dog-wrap[data-state="listening"] .tail{animation:tailSway 1.6s ease-in-out infinite;}
+  @keyframes tailSway{ 0%,100%{transform:rotate(0deg);} 50%{transform:rotate(10deg);} }
+  @keyframes tailWag{ 0%,100%{transform:rotate(-14deg);} 50%{transform:rotate(14deg);} }
 
-<link
-    rel="preconnect"
-    href="https://fonts.googleapis.com"
+  .dog-wrap[data-state="idle"] .head-group{animation:bob 3.2s ease-in-out infinite;}
+  .dog-wrap[data-state="happy"] .head-group{animation:hop .5s ease-in-out 2;}
+  @keyframes bob{ 0%,100%{transform:translateY(0);} 50%{transform:translateY(-4px);} }
+  @keyframes hop{ 0%,100%{transform:translateY(0);} 50%{transform:translateY(-14px);} }
 
-이 버전에서 중요한 변화는 Practice App이 saved_words를 전혀 보지 않는다는 것이야. 학생이 Unit 6을 누르면 CSV의 Unit 6 전체 단어가 들어가. 따라서 학생이 이미 future = 미래라는 뜻을 알고 있어서 Word List에서 버렸더라도, 발음 Practice에서는 future를 계속 발음하게 돼.
+  .soundwave{opacity:0;}
+  .dog-wrap[data-state="listening"] .soundwave{animation:wavePulse 1.2s ease-out infinite;}
+  @keyframes wavePulse{ 0%{opacity:0;transform:scale(.7);} 40%{opacity:1;} 100%{opacity:0;transform:scale(1.25);} }
 
-또 판정 문구도 바꿨어. 기존 Artifact는 성공하면 "정확해요!"라고 했는데 
-, 이번 버전은 성공했을 때
+  .qmark{opacity:0;transform:translateY(4px);}
+  .dog-wrap[data-state="confused"] .qmark{opacity:1;transform:translateY(0);animation:qBounce 1.4s ease-in-out infinite;}
+  @keyframes qBounce{ 0%,100%{transform:translateY(0);} 50%{transform:translateY(-6px);} }
 
-콩이가 알아들었어! 🎉
-콩이가 들은 말: “astronaut”
-목표 단어로 인식되었어요!
+  .confetti-layer{position:absolute;inset:0;pointer-events:none;overflow:visible;}
+  .confetti-piece{position:absolute;top:46%;left:50%;width:9px;height:9px;border-radius:2px;opacity:0;}
+  @keyframes confettiFly{
+    0%{opacity:1;transform:translate(0,0) rotate(0deg) scale(1);}
+    100%{opacity:0;transform:translate(var(--dx),var(--dy)) rotate(var(--rot)) scale(.5);}
+  }
 
-라고 나와. 실패해도
+  .word-card{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    background:var(--surface);
+    border:2px solid var(--line);
+    border-radius:20px;
+    padding:14px 16px;
+  }
+  .unit-badge{
+    align-self:flex-start;
+    font-size:11px;
+    font-weight:700;
+    color:var(--accent-ink);
+    background:var(--surface-2);
+    border-radius:999px;
+    padding:2px 10px;
+  }
+  .word-text{
+    font-family:'Baloo 2',sans-serif;
+    font-weight:800;
+    font-size:28px;
+    color:var(--ink);
+    word-break:break-word;
+  }
+  .word-meaning{font-size:14px;color:var(--ink-soft);}
+  .word-example{font-size:12.5px;color:var(--ink-soft);font-style:italic;line-height:1.4;}
 
-이번에는 다르게 들렸어.
+  .mic-btn{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    width:100%;
+    border:none;
+    cursor:pointer;
+    background:var(--accent);
+    color:var(--accent-ink);
+    font-family:'Jua',sans-serif;
+    font-size:17px;
+    padding:16px;
+    border-radius:999px;
+    box-shadow:0 6px 0 var(--accent-dark);
+    transition:transform .08s ease, box-shadow .08s ease;
+  }
+  .mic-btn:active{transform:translateY(4px);box-shadow:0 2px 0 var(--accent-dark);}
+  .mic-btn:focus-visible{outline:3px solid var(--sky);outline-offset:3px;}
+  .mic-btn svg{width:22px;height:22px;flex:none;}
+  .mic-btn.listening{background:var(--sky);box-shadow:0 6px 0 #2E93BC;animation:micPulse 1s ease-in-out infinite;}
+  @keyframes micPulse{ 0%,100%{transform:scale(1);} 50%{transform:scale(1.03);} }
+  .mic-btn:disabled{opacity:.55;cursor:not-allowed;box-shadow:none;}
 
-라고 하지 “발음이 틀렸어요”라고 판정하지 않아.
+  .hint{text-align:center;font-size:12px;color:var(--ink-soft);margin:0;}
 
-결과도 예를 들어
+  .feedback{
+    background:var(--surface);
+    border-radius:18px;
+    padding:14px 16px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    border:2px solid var(--line);
+  }
+  .feedback.correct{border-color:var(--success);background:var(--success-soft);}
+  .feedback.retry{border-color:var(--miss);background:var(--miss-soft);}
+  .heard{font-size:14px;color:var(--ink-soft);margin:0;}
+  .heard b{color:var(--ink);font-family:'Baloo 2',sans-serif;}
+  .verdict{font-family:'Jua',sans-serif;font-size:16px;margin:0;color:var(--ink);}
+  .feedback-actions{display:flex;gap:10px;margin-top:4px;}
+  .btn-primary,.btn-secondary{
+    flex:1;border:none;border-radius:999px;padding:11px 14px;
+    font-family:'Noto Sans KR',sans-serif;font-weight:700;font-size:14px;cursor:pointer;
+  }
+  .btn-primary{background:var(--success);color:#fff;}
+  .btn-secondary{background:var(--surface-2);color:var(--ink);}
+  .btn-primary:focus-visible,.btn-secondary:focus-visible{outline:3px solid var(--sky);outline-offset:2px;}
 
-14 / 20
-🐶 콩이가 목표 단어로 알아들은 비율 70%
-※ 이 수치는 발음 점수가 아니라 음성 인식 시스템이 목표 단어로 인식한 비율이에요.
+  .unsupported{
+    background:var(--miss-soft);border:2px solid var(--miss);color:var(--ink);
+    border-radius:14px;padding:12px 14px;font-size:13px;text-align:center;line-height:1.5;
+  }
 
-로 나오도록 했어. 연구에서 실제로 측정하고 있는 구성개념과 학생 화면의 표현을 맞춘 거야.
+  /* name entry overlay */
+  .overlay{
+    position:fixed;inset:0;background:rgba(0,0,0,.45);
+    display:flex;align-items:center;justify-content:center;padding:20px;z-index:30;
+  }
+  .overlay-card{
+    background:var(--surface);border-radius:24px;padding:28px 24px;text-align:center;
+    max-width:320px;width:100%;box-shadow:0 12px 30px var(--shadow);
+  }
+  .overlay-emoji{font-size:48px;}
+  .overlay-card h2{font-family:'Jua',sans-serif;font-size:20px;margin:6px 0 4px;}
+  .overlay-card p{color:var(--ink-soft);font-size:13.5px;margin:0 0 16px;line-height:1.5;}
+  .name-input{
+    width:100%;border:2px solid var(--line);border-radius:14px;
+    padding:12px 14px;font-size:16px;font-family:'Noto Sans KR',sans-serif;
+    margin-bottom:12px;background:var(--bg);color:var(--ink);
+  }
+  .name-input:focus{outline:none;border-color:var(--sky);}
+  .overlay-card .btn-primary{width:100%;padding:13px;font-size:15px;}
 
-그리고 원본 Claude 코드처럼 window.claude.hot은 모두 제거했어. 그건 Claude Artifact 안에서만 쓰는 기능이야. 원본은 127개 단어도 JavaScript 안에 직접 넣어두었지만 
-, 지금 코드는 wordlist_1001.csv → Python → JavaScript 순으로 자동 전달해.
+  .celebrate-score{
+    font-family:'Baloo 2',sans-serif;font-size:34px;font-weight:800;
+    color:var(--success);margin:4px 0;font-variant-numeric:tabular-nums;
+  }
+  .celebrate-sub{font-size:13px;color:var(--ink-soft);margin:-8px 0 14px;}
+  .celebrate-actions{display:flex;flex-direction:column;gap:10px;}
+  .btn-form{
+    background:var(--sky);color:#0B3E52;border:none;border-radius:999px;
+    padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;
+  }
+  .btn-form:focus-visible{outline:3px solid var(--accent);outline-offset:2px;}
+  .form-note{font-size:11px;color:var(--ink-soft);margin-top:2px;}
 
-한 가지는 실제 배포 후 꼭 확인해야 해. Chrome에서 Practice 페이지를 열고 마이크 버튼을 직접 눌러봐야 해. 지금 방식은 Streamlit 내부 iframe에서 브라우저의 Web Speech API를 실행하므로, 배포 환경이나 Chrome의 iframe 권한 정책에 따라 마이크/음성인식 권한이 막힐 가능성이 있어. 만약 🙈 이 브라우저에서는 음성 인식을 사용할 수 없어요가 뜨거나 마이크를 눌러도 반응이 없다면, 그건 단어 데이터 문제가 아니라 Streamlit iframe과 브라우저 권한 문제일 가능성이 높아. 그 경우에는 디자인은 그대로 두고 마이크 부분만 다른 방식으로 바꾸면 돼.
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;}
+  }
+</style>
 
-먼저 이걸 GitHub에 넣어서 ① 돌다리가 보이는지 → ② Unit 단어가 CSV와 맞는지 → ③ Chrome에서 마이크가 작동하는지 세 가지만 확인해봐.
+<div class="page">
+  <header class="topbar">
+    <div class="brand">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M12 21c-4 0-7-2.6-7-6.4C5 10.6 8 6 12 6s7 4.6 7 8.6C19 18.4 16 21 12 21Z" fill="currentColor"/><ellipse cx="8.3" cy="8" rx="2.1" ry="2.8" fill="currentColor"/><ellipse cx="15.7" cy="8" rx="2.1" ry="2.8" fill="currentColor"/></svg>
+      <div class="brand-text">
+        <span>멍멍 발음 친구</span>
+        <span class="brand-sub" id="studentLabel"></span>
+      </div>
+    </div>
+    <div class="score" id="scoreDisplay">콩이가 알아들은 단어 0개</div>
+  </header>
 
-r: This app has encountered an error. The original error message is redacted to prevent data leaks. Full error details have been recorded in the logs (if you're on Streamlit Cloud, click on 'Manage app' in the lower right of your app).
-Traceback:
-File "/usr/local/lib/python3.13/ast.py", line 50, in parse     return compile(source, filename, mode, flags,                    _feature_version=feature_version, optimize=optimize)
+  <!-- unit selection: stepping stones across the pond -->
+  <div class="pond-view" id="pondView" hidden>
+    <div class="speech-bubble">어느 유닛부터 건너볼까? 🐾</div>
+    <div class="pond">
+      <div class="lily" style="width:34px;height:22px;top:14px;left:18px;"></div>
+      <div class="lily" style="width:26px;height:18px;top:70%;right:14px;"></div>
+      <div class="ripple" style="width:46px;height:46px;top:40%;left:60%;"></div>
+      <div class="pond-path" id="stonesContainer"></div>
+    </div>
+    <p class="pond-hint">돌다리를 누르면 그 유닛 단어만 연습해요</p>
+  </div>
 
+  <div id="practiceView" hidden>
+  <div class="progress-wrap">
+    <div class="progress-row">
+      <span>진행 <b id="progressCurrent">1</b> / <span id="progressTotal">127</span></span>
+      <div class="progress-links">
+        <button class="finish-link" id="backToPondBtn" type="button">유닛 바꾸기</button>
+        <button class="finish-link" id="finishBtn" type="button">그만하고 결과 보기</button>
+      </div>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:1%"></div></div>
+  </div>
 
+  <section class="stage">
+    <div class="speech-bubble" id="speechBubble">안녕! 나는 콩이야. 아래 단어를 나한테 말해줘! 🐾</div>
 
-원인은 거의 확실해. 방금 준 긴 코드에서 HTML/CSS/JavaScript를 Python f"""...""" 안에 넣으면서 {} 중괄호가 너무 많이 섞여 Python 파서가 깨진 것이야. 그래서 Streamlit이 실행 단계까지 못 가고 ast.py ... compile(...)에서 멈춘 거야.
+    <div class="dog-wrap" id="dogWrap" data-state="idle">
+      <svg class="dog-svg" viewBox="0 0 240 260" aria-hidden="true">
+        <path class="tail" d="M182 188 C 214 176, 226 146, 208 124 C 222 142, 216 174, 190 194 Z" fill="var(--dog-fur)"/>
+        <ellipse class="body" cx="120" cy="206" rx="76" ry="46" fill="var(--dog-fur)"/>
+        <ellipse cx="93" cy="244" rx="17" ry="11" fill="var(--surface)"/>
+        <ellipse cx="147" cy="244" rx="17" ry="11" fill="var(--surface)"/>
 
-이번에는 그 문제를 아예 없애려고 f-string을 쓰지 않고 일반 문자열 + .replace() 방식으로 다시 만든 뒤, Python 문법 컴파일까지 실제로 검증했어. 업로드한 원래 Claude 코드의 강아지/돌다리/마이크 구조를 그대로 기반으로 했어. 
+        <g class="head-group">
+          <circle class="head" cx="120" cy="118" r="78" fill="var(--dog-fur)"/>
+          <path class="ear ear-left" d="M65 55 C 25 70, 15 118, 48 175 C 67.8 209.2, 42 95, 78 100 Z" fill="var(--dog-fur-dark)"/>
+          <path class="ear ear-right" d="M175 55 C 215 70, 225 118, 192 175 C 172.2 209.2, 198 95, 162 100 Z" fill="var(--dog-fur-dark)"/>
+          <ellipse cx="80" cy="138" rx="15" ry="9" fill="#FF6E6E" opacity=".35"/>
+          <ellipse cx="160" cy="138" rx="15" ry="9" fill="#FF6E6E" opacity=".35"/>
+          <ellipse class="snout" cx="120" cy="146" rx="40" ry="29" fill="var(--surface)"/>
+          <ellipse cx="120" cy="130" rx="11" ry="8" fill="var(--ink)"/>
 
-GitHub에서 pages/04🐥_발음짱이 될거야.py 내용을 전부 삭제하고 이 파일 내용으로 통째로 교체해줘.
+          <g class="eyes-normal">
+            <circle cx="90" cy="103" r="8" fill="var(--dog-eye)"/>
+            <circle cx="150" cy="103" r="8" fill="var(--dog-eye)"/>
+            <circle cx="92.5" cy="100" r="2.2" fill="#fff"/>
+            <circle cx="152.5" cy="100" r="2.2" fill="#fff"/>
+          </g>
+          <g class="eyes-happy" hidden>
+            <path d="M80 106 Q90 92 100 106" stroke="var(--dog-eye)" stroke-width="6" stroke-linecap="round" fill="none"/>
+            <path d="M140 106 Q150 92 160 106" stroke="var(--dog-eye)" stroke-width="6" stroke-linecap="round" fill="none"/>
+          </g>
+          <g class="eyes-listening" hidden>
+            <circle cx="90" cy="103" r="9.5" fill="var(--dog-eye)"/>
+            <circle cx="150" cy="103" r="9.5" fill="var(--dog-eye)"/>
+            <circle cx="93.5" cy="99" r="2.6" fill="#fff"/>
+            <circle cx="153.5" cy="99" r="2.6" fill="#fff"/>
+          </g>
+          <g class="eyes-confused" hidden>
+            <circle cx="90" cy="103" r="8" fill="var(--dog-eye)"/>
+            <path d="M141 103 Q150 97 159 103" stroke="var(--dog-eye)" stroke-width="6" stroke-linecap="round" fill="none"/>
+          </g>
 
-검증 완료된 04🐥_발음짱이 될거야.py 받기
+          <g class="mouth-normal">
+            <path d="M104 160 Q120 170 136 160" stroke="var(--ink)" stroke-width="4" stroke-linecap="round" fill="none"/>
+          </g>
+          <g class="mouth-happy" hidden>
+            <path d="M98 158 Q120 192 142 158 Z" fill="var(--ink)"/>
+            <ellipse cx="120" cy="176" rx="13" ry="9" fill="#FF9AA6"/>
+          </g>
+          <g class="mouth-confused" hidden>
+            <path d="M106 163 Q113 156 120 163 T134 163" stroke="var(--ink)" stroke-width="4" stroke-linecap="round" fill="none"/>
+          </g>
 
-이 파일은 이미 Python syntax check 통과했어.
+          <text class="qmark" x="176" y="58" font-family="Baloo 2, sans-serif" font-size="34" font-weight="800" fill="var(--ink)">?</text>
 
-이번 버전도 그대로:
+          <g class="soundwave" stroke="var(--sky)" fill="none" stroke-width="3" stroke-linecap="round">
+            <path d="M40 92 Q30 100 40 108"/>
+            <path d="M30 86 Q14 100 30 114"/>
+          </g>
+        </g>
+      </svg>
+      <div class="confetti-layer" id="confettiLayer"></div>
+    </div>
+  </section>
 
-data/wordlist_1001.csv에서 전체 단어 자동 로드
-saved_words와 관계없이 Unit 전체 발음 연습
-Claude Artifact의 콩이 디자인 유지
-Chrome Web Speech API 사용
-성공 표현을 **“발음이 정확하다”가 아니라 “목표 단어로 인식되었다”**로 변경
-Claude 전용 window.claude.hot 제거
-기존 Google Form 연결 유지
-로 되어 있어.
+  <section class="word-card" id="wordCard">
+    <span class="unit-badge" id="wordUnit">Unit 4</span>
+    <span class="word-text" id="wordText">dog</span>
+    <span class="word-meaning" id="wordMeaning">개</span>
+    <span class="word-example" id="wordExample">This is a dog.</span>
+  </section>
 
-GitHub에서는 파일 업로드보다 기존 파일 열기 → 전체 삭제 → 새 파일 내용 전체 복사/붙여넣기 → Commit changes 방식으로 해도 돼. 이걸 올린 뒤에는 우선 페이지가 정상적으로 열리는지만 확인해봐. 
+  <button class="mic-btn" id="micBtn" type="button">
+    <svg viewBox="0 0 24 24" fill="none"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Z" fill="currentColor"/><path d="M19 11a7 7 0 0 1-14 0M12 18v3" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
+    <span id="micLabel">눌러서 말해보세요</span>
+  </button>
+  <p class="hint" id="hintText">Chrome 브라우저 추천 · 마이크 권한을 허용해주세요</p>
 
+  <section class="feedback" id="feedback" hidden>
+    <p class="heard" id="heardText"></p>
+    <p class="verdict" id="verdictText"></p>
+    <div class="feedback-actions">
+      <button class="btn-secondary" id="retryBtn" type="button" hidden>다시 말해보기</button>
+      <button class="btn-primary" id="nextBtn" type="button" hidden>다음 단어 ▶</button>
+    </div>
+  </section>
 
-04🐥_발음짱이 될거야.py
-코드
+  <div class="unsupported" id="unsupportedBox" hidden>
+    🙈 이 브라우저는 음성 인식을 지원하지 않아요. 최신 Chrome 브라우저에서 이 페이지를 열어주세요.
+  </div>
+  </div>
+</div>
 
+<!-- name entry overlay -->
+<div class="overlay" id="nameOverlay">
+  <div class="overlay-card">
+    <div class="overlay-emoji">🐶</div>
+    <h2>이름을 알려줘!</h2>
+    <p>콩이가 누구랑 발음 연습을 하는지 알아야 기록을 남길 수 있어요.</p>
+    <input type="text" id="nameInput" class="name-input" placeholder="이름을 입력하세요" maxlength="20">
+    <button class="btn-primary" id="startBtn" type="button">연습 시작하기</button>
+  </div>
+</div>
 
+<!-- completion overlay -->
+<div class="overlay" id="celebrateOverlay" hidden>
+  <div class="overlay-card">
+    <div class="overlay-emoji" id="celebrateEmoji">🏆</div>
+    <h2 id="celebrateName">수고했어요!</h2>
+    <div class="celebrate-score" id="celebrateScore">0 / 127</div>
+    <p class="celebrate-sub" id="celebrateEncourage">콩이가 목표 단어로 알아들은 단어 개수예요.</p>
+    <div class="celebrate-actions">
+      <button class="btn-form" id="recordBtn" type="button">📋 구글 설문지로 기록 남기기</button>
+      <button class="btn-secondary" id="anotherUnitBtn" type="button">다른 유닛 연습하기</button>
+      <button class="btn-primary" id="restartBtn" type="button">다음 학생 시작하기</button>
+    </div>
+    <p class="form-note" id="formNote"></p>
+  </div>
+</div>
 
+<script>
+(function(){
+  var WORDS_RAW = __WORDS_JSON__;
+  var WORDS_ALL = WORDS_RAW.map(function(w){ return { unit:w.u, text:w.t, meaning:w.m, example:w.e }; });
+  var UNITS = [];
+  WORDS_ALL.forEach(function(w){ if (UNITS.indexOf(w.unit) === -1) UNITS.push(w.unit); });
+  function unitLabel(u){ return u.indexOf('Special Reading') === 0 ? u.replace('Special ', '') : u; }
+
+  /* ---- Google Form hook: paste real values here once the form exists ---- */
+  var FORM_CONFIG = {
+    baseUrl: 'https://docs.google.com/forms/d/e/1FAIpQLScO37vlswQSm6N-mqx1w5VrYeCnsao1JVlK-WqzJME82imV-A/viewform',
+    nameEntry: 'entry.1598372142',
+    scoreEntry: 'entry.1041762124',
+    totalEntry: ''    /* optional e.g. 'entry.333333333' */
+  };
+  function formReady(){ return !!(FORM_CONFIG.baseUrl && FORM_CONFIG.nameEntry && FORM_CONFIG.scoreEntry); }
+  function buildFormUrl(name, correct, total){
+    var params = ['usp=pp_url'];
+    params.push(FORM_CONFIG.nameEntry + '=' + encodeURIComponent(name));
+    params.push(FORM_CONFIG.scoreEntry + '=' + encodeURIComponent(correct));
+    if (FORM_CONFIG.totalEntry) params.push(FORM_CONFIG.totalEntry + '=' + encodeURIComponent(total));
+    return FORM_CONFIG.baseUrl + '?' + params.join('&');
+  }
+
+  var state = { index:0, correct:new Set(), attempted:new Set(), listening:false, name:'', words:[], currentUnit:'' };
+
+  var els = {
+    studentLabel: document.getElementById('studentLabel'),
+    score: document.getElementById('scoreDisplay'),
+    pondView: document.getElementById('pondView'),
+    stonesContainer: document.getElementById('stonesContainer'),
+    practiceView: document.getElementById('practiceView'),
+    backToPondBtn: document.getElementById('backToPondBtn'),
+    anotherUnitBtn: document.getElementById('anotherUnitBtn'),
+    progCurrent: document.getElementById('progressCurrent'),
+    progTotal: document.getElementById('progressTotal'),
+    progFill: document.getElementById('progressFill'),
+    finishBtn: document.getElementById('finishBtn'),
+    bubble: document.getElementById('speechBubble'),
+    dogWrap: document.getElementById('dogWrap'),
+    confetti: document.getElementById('confettiLayer'),
+    unit: document.getElementById('wordUnit'),
+    text: document.getElementById('wordText'),
+    meaning: document.getElementById('wordMeaning'),
+    example: document.getElementById('wordExample'),
+    micBtn: document.getElementById('micBtn'),
+    micLabel: document.getElementById('micLabel'),
+    hint: document.getElementById('hintText'),
+    feedback: document.getElementById('feedback'),
+    heard: document.getElementById('heardText'),
+    verdict: document.getElementById('verdictText'),
+    retryBtn: document.getElementById('retryBtn'),
+    nextBtn: document.getElementById('nextBtn'),
+    unsupported: document.getElementById('unsupportedBox'),
+    nameOverlay: document.getElementById('nameOverlay'),
+    nameInput: document.getElementById('nameInput'),
+    startBtn: document.getElementById('startBtn'),
+    overlay: document.getElementById('celebrateOverlay'),
+    celebrateName: document.getElementById('celebrateName'),
+    celebrateScore: document.getElementById('celebrateScore'),
+    celebrateEncourage: document.getElementById('celebrateEncourage'),
+    recordBtn: document.getElementById('recordBtn'),
+    formNote: document.getElementById('formNote'),
+    restartBtn: document.getElementById('restartBtn')
+  };
+
+  function renderStones(){
+    els.stonesContainer.innerHTML = '';
+    UNITS.forEach(function(u, i){
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'stone';
+      btn.style.marginLeft = (i % 2 === 0) ? '-20px' : '20px';
+      btn.textContent = unitLabel(u);
+      btn.addEventListener('click', function(){ selectUnit(u); });
+      els.stonesContainer.appendChild(btn);
+    });
+  }
+
+  function selectUnit(unit){
+    state.currentUnit = unit;
+    state.words = WORDS_ALL.filter(function(w){ return w.unit === unit; });
+    state.correct = new Set();
+    state.attempted = new Set();
+    els.progTotal.textContent = state.words.length;
+    updateScore();
+    els.pondView.hidden = true;
+    els.practiceView.hidden = false;
+    loadWord(0);
+  }
+
+  function backToPond(){
+    els.overlay.hidden = true;
+    els.practiceView.hidden = true;
+    els.pondView.hidden = false;
+  }
+  els.backToPondBtn.addEventListener('click', backToPond);
+  els.anotherUnitBtn.addEventListener('click', backToPond);
+
+  function setDogState(s){ els.dogWrap.setAttribute('data-state', s); }
+  function showGroup(prefix, name){
+    ['normal','happy','listening','confused'].forEach(function(n){
+      var g = els.dogWrap.querySelector('.'+prefix+'-'+n);
+      if(g) g.hidden = (n !== name);
+    });
+  }
+  function setFace(name){
+    showGroup('eyes', name === 'listening' ? 'listening' : (name === 'happy' ? 'happy' : (name === 'confused' ? 'confused' : 'normal')));
+    showGroup('mouth', name === 'happy' ? 'happy' : (name === 'confused' ? 'confused' : 'normal'));
+  }
+
+  function updateScore(){ els.score.textContent = '콩이가 알아들은 단어 ' + state.correct.size + '개'; }
+  function updateProgress(){
+    els.progCurrent.textContent = state.index + 1;
+    els.progFill.style.width = Math.max(4, ((state.index+1)/state.words.length)*100) + '%';
+  }
+
+  function loadWord(i){
+    state.index = i;
+    var w = state.words[i];
+    els.unit.textContent = w.unit;
+    els.text.textContent = w.text;
+    els.meaning.textContent = w.meaning;
+    els.example.textContent = w.example;
+    els.feedback.hidden = true;
+    els.feedback.className = 'feedback';
+    els.retryBtn.hidden = true;
+    els.nextBtn.hidden = true;
+    els.bubble.textContent = '이 단어를 나한테 말해줘! 🎧';
+    setDogState('idle');
+    setFace('normal');
+    updateProgress();
+    if (recognitionSupported){
+      els.micBtn.disabled = false;
+      els.micLabel.textContent = '눌러서 말해보세요';
+    }
+  }
+
+  function normalize(s){
+    return (s || '').toLowerCase().replace(/[^a-z' ]/g, ' ').replace(/\s+/g,' ').trim();
+  }
+  function isMatch(transcript, target){
+    var t = normalize(transcript);
+    var tgt = normalize(target);
+    if(!t) return false;
+    if(t === tgt) return true;
+    return t.split(' ').indexOf(tgt) !== -1;
+  }
+
+  function burstConfetti(){
+    var colors = ['#FF9A4D','#4FB6E0','#3FAE68','#FFD166','#EF476F'];
+    for (var i=0;i<16;i++){
+      var p = document.createElement('span');
+      p.className = 'confetti-piece';
+      var angle = Math.random()*Math.PI*2;
+      var dist = 60 + Math.random()*70;
+      p.style.setProperty('--dx', Math.cos(angle)*dist + 'px');
+      p.style.setProperty('--dy', (Math.sin(angle)*dist - 30) + 'px');
+      p.style.setProperty('--rot', (Math.random()*360) + 'deg');
+      p.style.background = colors[i % colors.length];
+      p.style.animation = 'confettiFly .9s ease-out forwards';
+      p.style.animationDelay = (Math.random()*0.08) + 's';
+      els.confetti.appendChild(p);
+      (function(node){ setTimeout(function(){ node.remove(); }, 1100); })(p);
+    }
+  }
+
+  function showCorrect(heardWord){
+    state.attempted.add(state.index);
+    setDogState('happy');
+    setFace('happy');
+    burstConfetti();
+    state.correct.add(state.index);
+    updateScore();
+    els.bubble.textContent = '멍멍! 내가 알아들었어! 🎉';
+    els.feedback.hidden = false;
+    els.feedback.className = 'feedback correct';
+    els.heard.innerHTML = '내가 들은 말: <b>"' + heardWord + '"</b>';
+    els.verdict.textContent = '목표 단어로 인식되었어요! 👏';
+    els.retryBtn.hidden = true;
+    els.nextBtn.hidden = false;
+    els.micBtn.disabled = true;
+    els.micLabel.textContent = '완료!';
+  }
+
+  function showRetry(heardWord){
+    state.attempted.add(state.index);
+    setDogState('confused');
+    setFace('confused');
+    els.bubble.textContent = '음... 다시 한번 말해줄래? 🤔';
+    els.feedback.hidden = false;
+    els.feedback.className = 'feedback retry';
+    els.heard.innerHTML = heardWord ? ('내가 들은 말: <b>"' + heardWord + '"</b>') : '아무 소리도 못 들었어요.';
+    els.verdict.textContent = '조금 다르게 들렸어요. 다시 말해볼까요?';
+    els.retryBtn.hidden = false;
+    els.nextBtn.hidden = false;
+    els.micBtn.disabled = false;
+    els.micLabel.textContent = '눌러서 말해보세요';
+  }
+
+  function encouragementFor(ratio){
+    if (ratio >= 0.9) return '완벽해요! 발음 천재예요! 🌟';
+    if (ratio >= 0.7) return '정말 잘했어요! 계속 이렇게 해봐요! 🎉';
+    if (ratio >= 0.4) return '멋진 시도예요! 조금만 더 연습해볼까요? 💪';
+    return '시작이 반이에요! 다음엔 더 잘할 수 있어요 🐾';
+  }
 
   function finishSession(){
     var attemptedCount = state.attempted.size;
@@ -471,3 +926,4 @@ components.html(
     practice_html,
     height=1150,
     scrolling=True,
+)
