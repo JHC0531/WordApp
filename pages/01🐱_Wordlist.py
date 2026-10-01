@@ -558,30 +558,14 @@ example = row["example"]
 
 st.markdown(
     f"""
-    <div class="word-card">
-
-        <div class="word-number">
-            WORD {current_index + 1}
-        </div>
-
-        <div class="word-main">
-            {word}
-        </div>
-
-        <div class="word-meaning">
-            {meaning}
-        </div>
-
-        <div class="example-label">
-            Example
-        </div>
-
-        <div class="example">
-            {example}
-        </div>
-
-    </div>
-    """,
+<div class="word-card">
+<div class="word-number">WORD {current_index + 1}</div>
+<div class="word-main">{word}</div>
+<div class="word-meaning">{meaning}</div>
+<div class="example-label">Example</div>
+<div class="example">{example}</div>
+</div>
+""",
     unsafe_allow_html=True
 )
 
