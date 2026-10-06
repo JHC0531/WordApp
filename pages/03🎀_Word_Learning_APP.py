@@ -715,140 +715,64 @@ with tab2:
         f"🐱 {idx + 1} / {len(learning_df)}"
     )
 
-    st.markdown(
-        f"""
-<div class="question-card">
-<div class="card-label">🇰🇷 KOREAN → ENGLISH</div>
-<div class="question-main">
-{row["meaning"]}
-</div>
-<div class="think-text">
-🐱 영어 단어가 무엇인지 머릿속으로 떠올려 보세요.
-</div>
-</div>
-""",
-        unsafe_allow_html=True
-    )
-
-    # -------------------------
-    # FLIP
-    # -------------------------
+    # -----------------------------------------
+    # FRONT
+    # -----------------------------------------
 
     if not st.session_state.tab2_flip:
 
+        st.markdown(
+            """
+<div style="
+text-align:center;
+font-size:0.9rem;
+color:#98a2b3;
+margin-bottom:8px;
+">
+🇰🇷 뜻을 보고 영어 단어를 떠올려 보세요
+</div>
+""",
+            unsafe_allow_html=True
+        )
+
         if st.button(
-            "🎴 카드 뒤집기",
-            key="tab2_flip_button",
-            type="primary",
+            f"🇰🇷\n\n{row['meaning']}\n\n👆 눌러서 확인하기",
+            key=f"tab2_card_{row['word_id']}",
             use_container_width=True
         ):
 
             st.session_state.tab2_flip = True
-
-            st.session_state.play_tab2_word = True
-
             st.rerun()
+
+    # -----------------------------------------
+    # BACK
+    # -----------------------------------------
 
     else:
 
         st.markdown(
             f"""
 <div class="answer-box">
-<div class="answer-label">✨ ANSWER</div>
+<div class="answer-label">🇬🇧 ENGLISH</div>
 <div class="answer-word">{row["word"]}</div>
 </div>
 """,
             unsafe_allow_html=True
         )
 
-        # 카드 뒤집으면 바로 단어 소리
-        if st.session_state.play_tab2_word:
-
-            try:
-
-                answer_audio = make_audio(
-                    row["word"]
-                )
-
-                if answer_audio:
-
-                    st.audio(
-                        answer_audio,
-                        format="audio/mp3",
-                        autoplay=True
-                    )
-
-            except Exception:
-
-                pass
-
-            st.session_state.play_tab2_word = False
-
-        if st.button(
-            f"🔊 {row['word']} 다시 듣기",
-            key=f"tab2_listen_{row['word_id']}",
-            use_container_width=True
-        ):
-
-            try:
-
-                answer_audio = make_audio(
-                    row["word"]
-                )
-
-                if answer_audio:
-
-                    st.audio(
-                        answer_audio,
-                        format="audio/mp3",
-                        autoplay=True
-                    )
-
-            except Exception:
-
-                pass
-
         if row["example"]:
 
-            st.markdown(
-                f"""
-<div class="example-box">
-<div class="example-label">📖 EXAMPLE</div>
-{row["example"]}
-</div>
-""",
-                unsafe_allow_html=True
+            st.caption(
+                f'📖 {row["example"]}'
             )
 
-        st.markdown(
-            "#### 🐱 내가 떠올린 답은 어땠나요?"
-        )
+        # -------------------------------------
+        # REVIEW / NEXT
+        # -------------------------------------
 
-        know_col, again_col = st.columns(2)
+        review_col, next_col = st.columns(2)
 
-        with know_col:
-
-            if st.button(
-                "💚 맞혔어요!",
-                key=f"tab2_known_{row['word_id']}",
-                use_container_width=True
-            ):
-
-                if idx < len(learning_df) - 1:
-
-                    st.session_state.tab2_index += 1
-                    st.session_state.tab2_flip = False
-                    reset_audio_flags()
-
-                    st.rerun()
-
-                else:
-
-                    st.success(
-                        "🎉 여기까지 모두 해냈어요!"
-                    )
-
-        with again_col:
+        with review_col:
 
             if st.button(
                 "⭐ 다시 볼래요",
@@ -864,8 +788,8 @@ with tab2:
 
                     st.session_state.tab2_index += 1
                     st.session_state.tab2_flip = False
-                    reset_audio_flags()
 
+                    reset_audio_flags()
                     st.rerun()
 
                 else:
@@ -874,18 +798,79 @@ with tab2:
                         "⭐ 다시 볼 단어에 저장했어요!"
                     )
 
+        with next_col:
+
+            if st.button(
+                "다음 →",
+                key=f"tab2_next_{row['word_id']}",
+                type="primary",
+                use_container_width=True
+            ):
+
+                if idx < len(learning_df) - 1:
+
+                    st.session_state.tab2_index += 1
+                    st.session_state.tab2_flip = False
+
+                    reset_audio_flags()
+                    st.rerun()
+
+                else:
+
+                    st.success(
+                        "🎉 뜻 → 영어 학습 완료!"
+                    )
+
+        # -------------------------------------
+        # OPTIONAL AUDIO
+        # -------------------------------------
+
+        st.write("")
+
+        if st.button(
+            "🔊 발음이 헷갈리면 다시 듣기",
+            key=f"tab2_audio_{row['word_id']}",
+            use_container_width=True
+        ):
+
+            try:
+
+                audio = make_audio(
+                    row["word"]
+                )
+
+                if audio:
+
+                    st.audio(
+                        audio,
+                        format="audio/mp3",
+                        autoplay=True
+                    )
+
+            except Exception:
+
+                st.caption(
+                    "음성을 불러오지 못했어요."
+                )
+
+    # -----------------------------------------
+    # PREVIOUS
+    # -----------------------------------------
+
     if idx > 0:
 
         if st.button(
-            "← 이전 단어",
+            "← 이전",
             key="tab2_previous"
         ):
 
             st.session_state.tab2_index -= 1
             st.session_state.tab2_flip = False
+
             reset_audio_flags()
 
             st.rerun()
+            
 
 # =========================================================
 # TAB 3
@@ -908,81 +893,46 @@ with tab3:
         f"🐻 {idx + 1} / {len(learning_df)}"
     )
 
-    st.markdown(
-        f"""
-<div class="question-card">
-<div class="card-label">🇬🇧 ENGLISH → KOREAN</div>
-<div class="word-preview">
-{row["word"]}
-</div>
-<div class="think-text">
-🐻 뜻을 떠올리기 전에 소리부터 들어보세요!
-</div>
-</div>
-""",
-        unsafe_allow_html=True
-    )
-
-    # -------------------------
-    # ENGLISH SOUND FIRST
-    # -------------------------
-
-    if st.button(
-        f"🔊 {row['word']} 듣기",
-        key=f"tab3_listen_{row['word_id']}",
-        type="primary",
-        use_container_width=True
-    ):
-
-        st.session_state.play_tab3_word = True
-
-        st.rerun()
-
-    if st.session_state.play_tab3_word:
-
-        try:
-
-            word_audio = make_audio(
-                row["word"]
-            )
-
-            if word_audio:
-
-                st.audio(
-                    word_audio,
-                    format="audio/mp3",
-                    autoplay=True
-                )
-
-        except Exception:
-
-            pass
-
-    # -------------------------
-    # FLIP
-    # -------------------------
+    # -----------------------------------------
+    # FRONT
+    # -----------------------------------------
 
     if not st.session_state.tab3_flip:
 
+        st.markdown(
+            """
+<div style="
+text-align:center;
+font-size:0.9rem;
+color:#98a2b3;
+margin-bottom:8px;
+">
+🇬🇧 영어 단어를 보고 뜻을 떠올려 보세요
+</div>
+""",
+            unsafe_allow_html=True
+        )
+
         if st.button(
-            "🎴 뜻 확인하기",
-            key="tab3_flip_button",
+            f"🇬🇧\n\n{row['word']}\n\n👆 눌러서 확인하기",
+            key=f"tab3_card_{row['word_id']}",
             use_container_width=True
         ):
 
             st.session_state.tab3_flip = True
-
             st.rerun()
+
+    # -----------------------------------------
+    # BACK
+    # -----------------------------------------
 
     else:
 
         st.markdown(
             f"""
 <div class="answer-box">
-<div class="answer-label">💡 MEANING</div>
-<div class="answer-meaning">
-{row["meaning"]}
-</div>
+<div class="answer-label">🇰🇷 MEANING</div>
+<div class="answer-meaning">{row["meaning"]}</div>
 </div>
 """,
             unsafe_allow_html=True
@@ -990,45 +940,17 @@ with tab3:
 
         if row["example"]:
 
-            st.markdown(
-                f"""
-<div class="example-box">
-<div class="example-label">📖 EXAMPLE</div>
-{row["example"]}
-</div>
-""",
-                unsafe_allow_html=True
+            st.caption(
+                f'📖 {row["example"]}'
             )
 
-        st.markdown(
-            "#### 🐻 내가 떠올린 뜻은 어땠나요?"
-        )
+        # -------------------------------------
+        # REVIEW / NEXT
+        # -------------------------------------
 
-        know_col, again_col = st.columns(2)
+        review_col, next_col = st.columns(2)
 
-        with know_col:
-
-            if st.button(
-                "💚 알았어요!",
-                key=f"tab3_known_{row['word_id']}",
-                use_container_width=True
-            ):
-
-                if idx < len(learning_df) - 1:
-
-                    st.session_state.tab3_index += 1
-                    st.session_state.tab3_flip = False
-                    reset_audio_flags()
-
-                    st.rerun()
-
-                else:
-
-                    st.success(
-                        "🎉 이 단계도 완료했어요!"
-                    )
-
-        with again_col:
+        with review_col:
 
             if st.button(
                 "⭐ 다시 볼래요",
@@ -1044,8 +966,8 @@ with tab3:
 
                     st.session_state.tab3_index += 1
                     st.session_state.tab3_flip = False
-                    reset_audio_flags()
 
+                    reset_audio_flags()
                     st.rerun()
 
                 else:
@@ -1054,10 +976,69 @@ with tab3:
                         "⭐ 다시 볼 단어에 저장했어요!"
                     )
 
+        with next_col:
+
+            if st.button(
+                "다음 →",
+                key=f"tab3_next_{row['word_id']}",
+                type="primary",
+                use_container_width=True
+            ):
+
+                if idx < len(learning_df) - 1:
+
+                    st.session_state.tab3_index += 1
+                    st.session_state.tab3_flip = False
+
+                    reset_audio_flags()
+                    st.rerun()
+
+                else:
+
+                    st.success(
+                        "🎉 영어 → 뜻 학습 완료!"
+                    )
+
+        # -------------------------------------
+        # OPTIONAL AUDIO
+        # -------------------------------------
+
+        st.write("")
+
+        if st.button(
+            "🔊 발음이 헷갈리면 다시 듣기",
+            key=f"tab3_audio_{row['word_id']}",
+            use_container_width=True
+        ):
+
+            try:
+
+                audio = make_audio(
+                    row["word"]
+                )
+
+                if audio:
+
+                    st.audio(
+                        audio,
+                        format="audio/mp3",
+                        autoplay=True
+                    )
+
+            except Exception:
+
+                st.caption(
+                    "음성을 불러오지 못했어요."
+                )
+
+    # -----------------------------------------
+    # PREVIOUS
+    # -----------------------------------------
+
     if idx > 0:
 
         if st.button(
-            "← 이전 단어",
+            "← 이전",
             key="tab3_previous"
         ):
 
@@ -1067,36 +1048,3 @@ with tab3:
             reset_audio_flags()
 
             st.rerun()
-
-# =========================================================
-# REVIEW BOX
-# =========================================================
-
-st.divider()
-
-if st.session_state.review_words:
-
-    review_df = learning_df[
-        learning_df["word_id"].isin(
-            st.session_state.review_words
-        )
-    ]
-
-    with st.expander(
-        f"⭐ 다시 만나고 싶은 단어 {len(review_df)}개"
-    ):
-
-        for _, review_row in review_df.iterrows():
-
-            st.markdown(
-                f"""
-**🐾 {review_row["word"]}**  
-{review_row["meaning"]}
-"""
-            )
-
-else:
-
-    st.caption(
-        "🌱 아직 ⭐ 표시한 단어가 없어요."
-    )
