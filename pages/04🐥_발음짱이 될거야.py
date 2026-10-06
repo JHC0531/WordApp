@@ -4,8 +4,8 @@ import json
 import streamlit.components.v1 as components
 
 st.set_page_config(
-    page_title="발음짱이 될거야",
-    page_icon="🐥",
+    page_title="콩이와 발음 도전",
+    page_icon="🐶",
     layout="centered"
 )
 
@@ -49,7 +49,7 @@ for _, row in df.iterrows():
 
 WORDS_JSON = json.dumps(word_data, ensure_ascii=False)
 
-practice_html = r"""<title>멍멍 발음 친구</title>
+practice_html = r"""<title>콩이와 발음 도전</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Jua&family=Noto+Sans+KR:wght@400;500;700;900&display=swap">
 <style>
