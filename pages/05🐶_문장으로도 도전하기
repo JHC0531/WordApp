@@ -1,1 +1,839 @@
 
+import streamlit as st
+import pandas as pd
+import json
+import streamlit.components.v1 as components
+
+st.set_page_config(
+    page_title="콩이와 문장으로 말하기",
+    page_icon="🐶",
+    layout="centered"
+)
+
+@st.cache_data
+def load_words():
+    df = pd.read_csv("data/wordlist_1001.csv")
+    df = df.fillna("")
+
+    required_columns = [
+        "word_id",
+        "unit",
+        "word",
+        "meaning",
+        "example",
+        "pronunciation_caution",
+    ]
+
+    missing = [c for c in required_columns if c not in df.columns]
+    if missing:
+        raise ValueError(f"CSV에 다음 열이 없습니다: {missing}")
+
+    return df
+
+try:
+    df = load_words()
+except Exception as e:
+    st.error("단어 파일을 불러오지 못했어요.")
+    st.code(str(e))
+    st.stop()
+
+sentence_data = []
+for _, row in df.iterrows():
+    sentence = str(row["example"]).strip()
+
+    # 예문이 없는 행은 문장 연습에서 제외
+    if not sentence:
+        continue
+
+    sentence_data.append({
+        "id": str(row["word_id"]),
+        "u": str(row["unit"]),
+        "t": str(row["word"]),
+        "m": str(row["meaning"]),
+        "e": sentence,
+    })
+
+WORDS_JSON = json.dumps(sentence_data, ensure_ascii=False)
+
+practice_html = r"""<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body><title>콩이와 문장으로 말하기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Jua&family=Noto+Sans+KR:wght@400;500;700;900&display=swap">
+<style>
+  /* Layout: one phone-width column — 콩이 stage, sentence card with sound chips, big mic button, feedback below */
+  :root{
+    --bg:#FFF8EE; --surface:#FFFFFF; --surface-2:#FFF1DC; --ink:#3A2E27; --ink-soft:#8A7A6B;
+    --accent:#FF9A4D; --accent-dark:#E67E2E; --accent-ink:#5A2E0A; --sky:#4FB6E0; --sky-dark:#2E93BC; --sky-ink:#0B3E52;
+    --success:#3FAE68; --success-soft:#DFF5E6; --miss:#E8825C; --miss-soft:#FDEAE1; --line:#F0DEC5; --shadow:rgba(58,46,39,0.14);
+    --water-a:#CDEFF8; --water-b:#9FDCEE; --water-c:#5FB6D9; --stone:#A3907C; --stone-dark:#7C6A58; --stone-ink:#FFF8EE; --lily:#4FAE6E;
+    --dog-fur:#E8A765; --dog-fur-dark:#C9823E; --dog-eye:#17120F;
+    --s-th:#FFD9A8; --s-f:#CDE8FF; --s-v:#E3D6FF; --s-r:#FFD0D6; --s-l:#CFF1D9; --s-ink:#3A2E27;
+    --free:#B9AC9E;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#20180F; --surface:#2C2116; --surface-2:#38291A; --ink:#F6ECDD; --ink-soft:#C4AF9A;
+      --accent:#FFA75C; --accent-dark:#C9752F; --accent-ink:#2E1704; --sky:#6FCBEF; --sky-dark:#3A92B5; --sky-ink:#082A38;
+      --success:#6BCB8D; --success-soft:#22392A; --miss:#F0987A; --miss-soft:#3B2A21; --line:#493725; --shadow:rgba(0,0,0,0.45);
+      --water-a:#123042; --water-b:#184358; --water-c:#1F5A78; --stone:#6B5B4C; --stone-dark:#493D32; --stone-ink:#FFEFDC; --lily:#3E8F5C;
+      --dog-fur:#F0BD7E; --dog-fur-dark:#D4934E; --dog-eye:#17120F;
+      --s-th:#6B4A1F; --s-f:#1F4766; --s-v:#43356B; --s-r:#6B2E38; --s-l:#245338; --s-ink:#FFF4E6;
+      --free:#7D6E60; color-scheme:dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#20180F; --surface:#2C2116; --surface-2:#38291A; --ink:#F6ECDD; --ink-soft:#C4AF9A;
+    --accent:#FFA75C; --accent-dark:#C9752F; --accent-ink:#2E1704; --sky:#6FCBEF; --sky-dark:#3A92B5; --sky-ink:#082A38;
+    --success:#6BCB8D; --success-soft:#22392A; --miss:#F0987A; --miss-soft:#3B2A21; --line:#493725; --shadow:rgba(0,0,0,0.45);
+    --water-a:#123042; --water-b:#184358; --water-c:#1F5A78; --stone:#6B5B4C; --stone-dark:#493D32; --stone-ink:#FFEFDC; --lily:#3E8F5C;
+    --dog-fur:#F0BD7E; --dog-fur-dark:#D4934E; --dog-eye:#17120F;
+    --s-th:#6B4A1F; --s-f:#1F4766; --s-v:#43356B; --s-r:#6B2E38; --s-l:#245338; --s-ink:#FFF4E6;
+    --free:#7D6E60; color-scheme:dark;
+  }
+  *{box-sizing:border-box;}
+  [hidden]{display:none!important;}
+  body{background:var(--bg);color:var(--ink);font-family:'Noto Sans KR',system-ui,sans-serif;padding-inline:16px;padding-block:20px;display:flex;justify-content:center;}
+  .page{width:100%;max-width:480px;display:flex;flex-direction:column;gap:14px;}
+  button{font:inherit;color:inherit;}
+
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .brand{display:flex;align-items:center;gap:8px;font-family:'Jua',sans-serif;font-size:18px;color:var(--accent-dark);min-width:0;}
+  .brand svg{width:26px;height:26px;flex:none;}
+  .brand-text{display:flex;flex-direction:column;line-height:1.15;min-width:0;}
+  .brand-sub{font-family:'Noto Sans KR',sans-serif;font-weight:500;font-size:11px;color:var(--ink-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .score{font-family:'Baloo 2',sans-serif;font-weight:700;font-size:14px;background:var(--surface-2);color:var(--ink);padding:6px 12px;border-radius:999px;font-variant-numeric:tabular-nums;flex:none;white-space:nowrap;}
+
+  .progress-wrap{display:flex;flex-direction:column;gap:4px;}
+  .progress-row{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:4px;font-size:12px;color:var(--ink-soft);}
+  .progress-row b{font-family:'Baloo 2',sans-serif;color:var(--ink);font-variant-numeric:tabular-nums;}
+  .progress-track{height:8px;border-radius:999px;background:var(--surface-2);overflow:hidden;}
+  .progress-fill{height:100%;background:var(--accent);border-radius:999px;transition:width .3s ease;}
+  .link-btn{background:none;border:none;font-size:12px;color:var(--ink-soft);text-decoration:underline;cursor:pointer;padding:2px 0;}
+  .link-btn:focus-visible{outline:2px solid var(--sky);outline-offset:2px;}
+  .progress-links{display:flex;gap:12px;}
+
+  /* unit selection */
+  .pond-view{display:flex;flex-direction:column;gap:14px;}
+  .pond{position:relative;background:linear-gradient(165deg,var(--water-a),var(--water-b) 55%,var(--water-c));border-radius:32px;padding:28px 18px 34px;overflow:hidden;box-shadow:0 8px 24px var(--shadow);}
+  .lily{position:absolute;border-radius:50%;background:var(--lily);opacity:.4;}
+  .pond-path{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:8px;}
+  .stone{font-family:'Jua',sans-serif;font-size:13px;line-height:1.2;text-align:center;color:var(--stone-ink);background:linear-gradient(160deg,var(--stone),var(--stone-dark));border:none;border-radius:48% 52% 50% 50% / 58% 46% 54% 42%;width:92px;min-height:58px;padding:6px 8px;box-shadow:0 5px 0 var(--stone-dark),0 9px 16px rgba(0,0,0,.2);cursor:pointer;transition:transform .15s ease;}
+  .stone small{display:block;font-family:'Noto Sans KR',sans-serif;font-size:10px;opacity:.85;}
+  .stone:hover{transform:translateY(-3px);}
+  .stone:focus-visible{outline:3px solid var(--accent);outline-offset:3px;}
+  .pond-hint{text-align:center;font-size:12px;color:var(--ink-soft);margin:0;}
+
+  /* stage */
+  .stage{position:relative;background:linear-gradient(180deg,var(--surface-2),var(--surface));border-radius:28px;padding:16px 16px 4px;display:flex;flex-direction:column;align-items:center;box-shadow:0 8px 24px var(--shadow);overflow:hidden;}
+  .speech-bubble{font-family:'Jua',sans-serif;font-size:14px;line-height:1.5;color:var(--ink);background:var(--surface);border:2px solid var(--line);border-radius:18px;padding:10px 14px;max-width:320px;text-align:center;position:relative;margin-bottom:6px;}
+  .speech-bubble::after{content:"";position:absolute;left:50%;bottom:-9px;transform:translateX(-50%);border-width:9px 8px 0 8px;border-style:solid;border-color:var(--surface) transparent transparent transparent;}
+  .dog-wrap{position:relative;width:150px;height:150px;}
+  .dog-svg{width:100%;height:100%;overflow:visible;}
+  .ear{transform-box:fill-box;transform-origin:top center;}
+  .dog-wrap[data-state="listening"] .ear-left{animation:earPerk 1s ease-in-out infinite alternate;}
+  .dog-wrap[data-state="listening"] .ear-right{animation:earPerk 1s ease-in-out infinite alternate-reverse;}
+  @keyframes earPerk{from{transform:rotate(0)}to{transform:rotate(-8deg) scale(1.03)}}
+  .tail{transform-box:fill-box;transform-origin:20% 60%;}
+  .dog-wrap[data-state="idle"] .tail{animation:tailSway 2.6s ease-in-out infinite;}
+  .dog-wrap[data-state="happy"] .tail{animation:tailWag .28s ease-in-out infinite;}
+  .dog-wrap[data-state="listening"] .tail{animation:tailSway 1.6s ease-in-out infinite;}
+  @keyframes tailSway{0%,100%{transform:rotate(0)}50%{transform:rotate(10deg)}}
+  @keyframes tailWag{0%,100%{transform:rotate(-14deg)}50%{transform:rotate(14deg)}}
+  .dog-wrap[data-state="idle"] .head-group{animation:bob 3.2s ease-in-out infinite;}
+  .dog-wrap[data-state="happy"] .head-group{animation:hop .5s ease-in-out 2;}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+  @keyframes hop{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
+  .soundwave{opacity:0;}
+  .dog-wrap[data-state="listening"] .soundwave{animation:wavePulse 1.2s ease-out infinite;}
+  @keyframes wavePulse{0%{opacity:0}40%{opacity:1}100%{opacity:0}}
+  .qmark{opacity:0;}
+  .dog-wrap[data-state="confused"] .qmark{opacity:1;animation:qBounce 1.4s ease-in-out infinite;}
+  @keyframes qBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+  .confetti-layer{position:absolute;inset:0;pointer-events:none;overflow:visible;}
+  .confetti-piece{position:absolute;top:46%;left:50%;width:9px;height:9px;border-radius:2px;opacity:0;}
+  @keyframes confettiFly{0%{opacity:1;transform:translate(0,0) rotate(0)}100%{opacity:0;transform:translate(var(--dx),var(--dy)) rotate(var(--rot)) scale(.5)}}
+
+  /* sentence card */
+  .card{display:flex;flex-direction:column;gap:12px;background:var(--surface);border:2px solid var(--line);border-radius:22px;padding:14px 16px 16px;}
+  .card-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .unit-badge{font-size:11px;font-weight:700;color:var(--accent-ink);background:var(--accent);border-radius:999px;padding:2px 10px;}
+  .target-word{font-size:13px;color:var(--ink-soft);min-width:0;}
+  .target-word b{font-family:'Baloo 2',sans-serif;font-size:16px;color:var(--ink);}
+  .sentence{display:flex;flex-wrap:wrap;gap:2px 4px;font-family:'Baloo 2',sans-serif;font-weight:700;font-size:25px;line-height:1.35;}
+  .tok{background:none;border:none;padding:0 3px;border-radius:8px;cursor:pointer;color:var(--ink);font:inherit;border-bottom:3px solid transparent;transition:background .15s ease;}
+  .tok:hover{background:var(--surface-2);}
+  .tok:focus-visible{outline:2px solid var(--sky);outline-offset:1px;}
+  .tok.target{border-bottom-color:var(--accent);}
+  .tok.ok{color:var(--success);}
+  .tok.miss{color:var(--miss);text-decoration:underline wavy var(--miss);text-underline-offset:5px;}
+  .tok.free{color:var(--free);}
+  .tok.speaking{background:var(--surface-2);}
+  .hl{border-radius:4px;color:var(--s-ink);padding:0 1px;}
+  .hl-th{background:var(--s-th);} .hl-f{background:var(--s-f);} .hl-v{background:var(--s-v);} .hl-r{background:var(--s-r);} .hl-l{background:var(--s-l);}
+  .meaning{font-size:13px;color:var(--ink-soft);margin:-4px 0 0;}
+
+  .listen-row{display:flex;gap:8px;flex-wrap:wrap;}
+  .pill-btn{display:inline-flex;align-items:center;gap:6px;border:2px solid var(--line);background:var(--surface-2);border-radius:999px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;}
+  .pill-btn:focus-visible{outline:3px solid var(--sky);outline-offset:2px;}
+  .pill-btn svg{width:16px;height:16px;flex:none;}
+
+  .sounds{display:flex;flex-direction:column;gap:8px;border-top:2px dashed var(--line);padding-top:12px;}
+  .sounds-label{font-size:12px;color:var(--ink-soft);margin:0;}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;}
+  .chip{border:2px solid transparent;border-radius:12px;padding:5px 11px;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:15px;cursor:pointer;color:var(--s-ink);line-height:1.2;}
+  .chip span{font-family:'Noto Sans KR',sans-serif;font-weight:500;font-size:11px;margin-left:4px;opacity:.8;}
+  .chip[aria-pressed="true"]{border-color:var(--ink);}
+  .chip:focus-visible{outline:3px solid var(--sky);outline-offset:2px;}
+  .chip-th{background:var(--s-th);} .chip-f{background:var(--s-f);} .chip-v{background:var(--s-v);} .chip-r{background:var(--s-r);} .chip-l{background:var(--s-l);}
+  .tip{font-size:13px;line-height:1.6;background:var(--surface-2);border-radius:14px;padding:10px 12px;margin:0;}
+  .tip b{font-family:'Baloo 2',sans-serif;}
+
+  .mic-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;border:none;cursor:pointer;background:var(--accent);color:var(--accent-ink);font-family:'Jua',sans-serif;font-size:17px;padding:16px;border-radius:999px;box-shadow:0 6px 0 var(--accent-dark);transition:transform .08s ease,box-shadow .08s ease;}
+  .mic-btn:active{transform:translateY(4px);box-shadow:0 2px 0 var(--accent-dark);}
+  .mic-btn:focus-visible{outline:3px solid var(--sky);outline-offset:3px;}
+  .mic-btn svg{width:22px;height:22px;flex:none;}
+  .mic-btn.listening{background:var(--sky);color:var(--sky-ink);box-shadow:0 6px 0 var(--sky-dark);}
+  .mic-btn:disabled{opacity:.55;cursor:not-allowed;}
+  .live{min-height:1.4em;text-align:center;font-family:'Baloo 2',sans-serif;font-size:15px;color:var(--ink-soft);margin:0;}
+  .hint{text-align:center;font-size:12px;color:var(--ink-soft);margin:0;}
+
+  .feedback{background:var(--surface);border-radius:20px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;border:2px solid var(--line);}
+  .feedback.pass{border-color:var(--success);background:var(--success-soft);}
+  .feedback.retry{border-color:var(--miss);background:var(--miss-soft);}
+  .fb-top{display:flex;align-items:center;gap:12px;}
+  .meter{font-family:'Baloo 2',sans-serif;font-weight:800;font-size:30px;font-variant-numeric:tabular-nums;line-height:1;flex:none;}
+  .feedback.pass .meter{color:var(--success);} .feedback.retry .meter{color:var(--miss);}
+  .verdict{font-family:'Jua',sans-serif;font-size:15px;margin:0;line-height:1.45;}
+  .heard{font-size:13px;color:var(--ink-soft);margin:0;word-break:break-word;}
+  .heard b{color:var(--ink);font-family:'Baloo 2',sans-serif;}
+  .miss-list{display:flex;flex-direction:column;gap:6px;}
+  .miss-title{font-size:12px;font-weight:700;margin:0;}
+  .miss-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--surface);border-radius:12px;padding:6px 8px;}
+  .miss-word{font-family:'Baloo 2',sans-serif;font-weight:800;font-size:17px;}
+  .miss-row .spacer{flex:1;}
+  .mini{border:none;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer;background:var(--surface-2);}
+  .mini.mic{background:var(--sky);color:var(--sky-ink);}
+  .mini:focus-visible{outline:2px solid var(--sky);outline-offset:2px;}
+  .mini-result{font-size:12px;font-weight:700;}
+  .mini-result.ok{color:var(--success);} .mini-result.no{color:var(--miss);}
+  .sound-tag{font-size:11px;border-radius:6px;padding:1px 6px;color:var(--s-ink);font-weight:700;}
+  .actions{display:flex;gap:10px;}
+  .btn-primary,.btn-secondary{flex:1;border:none;border-radius:999px;padding:11px 14px;font-weight:700;font-size:14px;cursor:pointer;text-align:center;text-decoration:none;}
+  .btn-primary{background:var(--success);color:#fff;}
+  .btn-secondary{background:var(--surface-2);color:var(--ink);}
+  .btn-primary:focus-visible,.btn-secondary:focus-visible{outline:3px solid var(--sky);outline-offset:2px;}
+  .unsupported{background:var(--miss-soft);border:2px solid var(--miss);border-radius:14px;padding:12px 14px;font-size:13px;text-align:center;line-height:1.5;}
+
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:20px;z-index:30;}
+  .overlay-card{background:var(--surface);border-radius:24px;padding:26px 22px;text-align:center;max-width:340px;width:100%;box-shadow:0 12px 30px var(--shadow);}
+  .overlay-emoji{font-size:44px;}
+  .overlay-card h2{font-family:'Jua',sans-serif;font-size:20px;margin:6px 0 4px;text-wrap:balance;}
+  .overlay-card p{color:var(--ink-soft);font-size:13.5px;margin:0 0 16px;line-height:1.5;}
+  .name-input{width:100%;border:2px solid var(--line);border-radius:14px;padding:12px 14px;font-size:16px;margin-bottom:12px;background:var(--bg);color:var(--ink);}
+  .name-input:focus{outline:none;border-color:var(--sky);}
+  .overlay-card .btn-primary{width:100%;display:block;padding:13px;}
+  .big-score{font-family:'Baloo 2',sans-serif;font-size:34px;font-weight:800;color:var(--success);margin:4px 0;font-variant-numeric:tabular-nums;}
+  .stack{display:flex;flex-direction:column;gap:10px;}
+  .btn-form{display:block;background:var(--sky);color:var(--sky-ink);border-radius:999px;padding:13px;font-size:14px;font-weight:700;text-decoration:none;}
+  .btn-form:focus-visible{outline:3px solid var(--accent);outline-offset:2px;}
+
+  @media (max-width:380px){ .sentence{font-size:21px;} }
+  @media (prefers-reduced-motion: reduce){ *{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;} }
+</style>
+
+<div class="page">
+  <header class="topbar">
+    <div class="brand">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 21c-4 0-7-2.6-7-6.4C5 10.6 8 6 12 6s7 4.6 7 8.6C19 18.4 16 21 12 21Z" fill="currentColor"/><ellipse cx="8.3" cy="8" rx="2.1" ry="2.8" fill="currentColor"/><ellipse cx="15.7" cy="8" rx="2.1" ry="2.8" fill="currentColor"/></svg>
+      <div class="brand-text"><span>콩이와 문장으로 말하기</span><span class="brand-sub" id="studentLabel">듣고 따라 말하며 문장으로 연습하기</span></div>
+    </div>
+    <div class="score" id="scoreDisplay">성공 0문장</div>
+  </header>
+
+  <div class="pond-view" id="pondView" hidden>
+    <div class="speech-bubble">이번엔 문장으로 말해보자! 어느 유닛부터 건너볼까? 🐾</div>
+    <div class="pond">
+      <div class="lily" style="width:34px;height:22px;top:14px;left:18px;"></div>
+      <div class="lily" style="width:26px;height:18px;top:70%;right:14px;"></div>
+      <div class="pond-path" id="stonesContainer"></div>
+    </div>
+    <p class="pond-hint">돌다리를 누르면 그 유닛 예문을 연습해요</p>
+  </div>
+
+  <div id="practiceView" hidden style="display:flex;flex-direction:column;gap:14px;">
+    <div class="progress-wrap">
+      <div class="progress-row">
+        <span>문장 <b id="progressCurrent">1</b> / <span id="progressTotal">0</span></span>
+        <div class="progress-links">
+          <button class="link-btn" id="backToPondBtn" type="button">유닛 바꾸기</button>
+          <button class="link-btn" id="finishBtn" type="button">그만하고 결과 보기</button>
+        </div>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:4%"></div></div>
+    </div>
+
+    <section class="stage">
+      <div class="speech-bubble" id="speechBubble">먼저 🔊 들어보고, 문장 전체를 나한테 말해줘!</div>
+      <div class="dog-wrap" id="dogWrap" data-state="idle">
+        <svg class="dog-svg" viewBox="0 0 240 260" aria-hidden="true">
+          <path class="tail" d="M182 188 C 214 176, 226 146, 208 124 C 222 142, 216 174, 190 194 Z" fill="var(--dog-fur)"/>
+          <ellipse cx="120" cy="206" rx="76" ry="46" fill="var(--dog-fur)"/>
+          <ellipse cx="93" cy="244" rx="17" ry="11" fill="var(--surface)"/>
+          <ellipse cx="147" cy="244" rx="17" ry="11" fill="var(--surface)"/>
+          <g class="head-group">
+            <circle cx="120" cy="118" r="78" fill="var(--dog-fur)"/>
+            <path class="ear ear-left" d="M65 55 C 25 70, 15 118, 48 175 C 67.8 209.2, 42 95, 78 100 Z" fill="var(--dog-fur-dark)"/>
+            <path class="ear ear-right" d="M175 55 C 215 70, 225 118, 192 175 C 172.2 209.2, 198 95, 162 100 Z" fill="var(--dog-fur-dark)"/>
+            <ellipse cx="80" cy="138" rx="15" ry="9" fill="#FF6E6E" opacity=".35"/>
+            <ellipse cx="160" cy="138" rx="15" ry="9" fill="#FF6E6E" opacity=".35"/>
+            <ellipse cx="120" cy="146" rx="40" ry="29" fill="var(--surface)"/>
+            <ellipse cx="120" cy="130" rx="11" ry="8" fill="var(--ink)"/>
+            <g class="eyes-normal"><circle cx="90" cy="103" r="8" fill="var(--dog-eye)"/><circle cx="150" cy="103" r="8" fill="var(--dog-eye)"/><circle cx="92.5" cy="100" r="2.2" fill="#fff"/><circle cx="152.5" cy="100" r="2.2" fill="#fff"/></g>
+            <g class="eyes-happy" hidden><path d="M80 106 Q90 92 100 106" stroke="var(--dog-eye)" stroke-width="6" stroke-linecap="round" fill="none"/><path d="M140 106 Q150 92 160 106" stroke="var(--dog-eye)" stroke-width="6" stroke-linecap="round" fill="none"/></g>
+            <g class="eyes-listening" hidden><circle cx="90" cy="103" r="9.5" fill="var(--dog-eye)"/><circle cx="150" cy="103" r="9.5" fill="var(--dog-eye)"/><circle cx="93.5" cy="99" r="2.6" fill="#fff"/><circle cx="153.5" cy="99" r="2.6" fill="#fff"/></g>
+            <g class="eyes-confused" hidden><circle cx="90" cy="103" r="8" fill="var(--dog-eye)"/><path d="M141 103 Q150 97 159 103" stroke="var(--dog-eye)" stroke-width="6" stroke-linecap="round" fill="none"/></g>
+            <g class="mouth-normal"><path d="M104 160 Q120 170 136 160" stroke="var(--ink)" stroke-width="4" stroke-linecap="round" fill="none"/></g>
+            <g class="mouth-happy" hidden><path d="M98 158 Q120 192 142 158 Z" fill="var(--ink)"/><ellipse cx="120" cy="176" rx="13" ry="9" fill="#FF9AA6"/></g>
+            <g class="mouth-confused" hidden><path d="M106 163 Q113 156 120 163 T134 163" stroke="var(--ink)" stroke-width="4" stroke-linecap="round" fill="none"/></g>
+            <text class="qmark" x="176" y="58" font-family="Baloo 2, sans-serif" font-size="34" font-weight="800" fill="var(--ink)">?</text>
+            <g class="soundwave" stroke="var(--sky)" fill="none" stroke-width="3" stroke-linecap="round"><path d="M40 92 Q30 100 40 108"/><path d="M30 86 Q14 100 30 114"/></g>
+          </g>
+        </svg>
+        <div class="confetti-layer" id="confettiLayer"></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <span class="unit-badge" id="unitBadge">Unit 4</span>
+        <span class="target-word">오늘의 단어 <b id="targetWord">perfect</b> · <span id="targetMeaning">완벽한</span></span>
+      </div>
+      <div class="sentence" id="sentence" aria-label="연습 문장"></div>
+      <div class="listen-row">
+        <button class="pill-btn" id="listenBtn" type="button"><svg viewBox="0 0 24 24" fill="none"><path d="M4 9v6h4l5 4V5L8 9H4Z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>들어보기</button>
+        <button class="pill-btn" id="slowBtn" type="button">🐢 천천히 듣기</button>
+      </div>
+      <div class="sounds" id="soundsBox">
+        <p class="sounds-label">이 문장 속 연습할 소리 · 눌러서 글자 위치와 입 모양 팁 보기 · 단어를 누르면 그 단어만 들려줘요</p>
+        <div class="chips" id="chips"></div>
+        <p class="tip" id="tip"></p>
+      </div>
+    </section>
+
+    <button class="mic-btn" id="micBtn" type="button">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Z" fill="currentColor"/><path d="M19 11a7 7 0 0 1-14 0M12 18v3" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
+      <span id="micLabel">눌러서 문장 말하기</span>
+    </button>
+    <p class="live" id="liveText"></p>
+    <p class="hint" id="hintText">Chrome 브라우저 추천 · 마이크 권한을 허용해주세요 · 문장 끝까지 한 번에 말해요</p>
+
+    <section class="feedback" id="feedback" hidden>
+      <div class="fb-top">
+        <div class="meter" id="meter">0%</div>
+        <p class="verdict" id="verdict"></p>
+      </div>
+      <p class="heard" id="heardText"></p>
+      <div class="miss-list" id="missList" hidden></div>
+      <div class="actions">
+        <button class="btn-secondary" id="retryBtn" type="button">다시 말해보기</button>
+        <button class="btn-primary" id="nextBtn" type="button">다음 문장 ▶</button>
+      </div>
+    </section>
+
+    <div class="unsupported" id="unsupportedBox" hidden>🙈 이 브라우저는 음성 인식을 지원하지 않아요. 최신 Chrome 브라우저에서 열어주세요.</div>
+  </div>
+</div>
+
+<div class="overlay" id="nameOverlay">
+  <div class="overlay-card">
+    <div class="overlay-emoji">🐶</div>
+    <h2>연습할 준비됐나요?</h2>
+    <p>이번에는 예문을 듣고 문장 전체를 말해볼 거예요. 이름이나 학습번호를 적어주세요.</p>
+    <input type="text" id="nameInput" class="name-input" placeholder="이름 또는 학습번호" maxlength="20" autocomplete="off">
+    <button class="btn-primary" id="startBtn" type="button">연습 시작하기</button>
+  </div>
+</div>
+
+<div class="overlay" id="celebrateOverlay" hidden>
+  <div class="overlay-card">
+    <div class="overlay-emoji">🏆</div>
+    <h2 id="celebrateName">수고했어요!</h2>
+    <div class="big-score" id="celebrateScore">0 / 0</div>
+    <p id="celebrateSub">콩이가 80% 이상 알아들은 문장 수예요.</p>
+    <div class="stack">
+      <a class="btn-form" id="recordLink" href="#" target="_blank" rel="noopener">📋 구글 설문지로 기록 남기기</a>
+      <button class="btn-secondary" id="anotherUnitBtn" type="button">다른 유닛 연습하기</button>
+      <button class="btn-primary" id="restartBtn" type="button">다음 학생 시작하기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var WORDS_RAW = __WORDS_JSON__;
+  var ITEMS = WORDS_RAW.map(function(w){ return { unit:w.u, word:w.t, meaning:w.m, sentence:w.e }; });
+  var UNITS = [];
+  ITEMS.forEach(function(w){ if (UNITS.indexOf(w.unit) === -1) UNITS.push(w.unit); });
+  function unitLabel(u){ return u.indexOf('Special Reading') === 0 ? u.replace('Special ', '') : u; }
+  var PASS = 0.8;
+
+  /* ---- Google Form (same form as 멍멍 발음 친구) ---- */
+  var FORM = {
+    baseUrl:'https://docs.google.com/forms/d/e/1FAIpQLScO37vlswQSm6N-mqx1w5VrYeCnsao1JVlK-WqzJME82imV-A/viewform',
+    nameEntry:'entry.1598372142', scoreEntry:'entry.1041762124'
+  };
+  function formUrl(name, score){
+    return FORM.baseUrl + '?usp=pp_url&' + FORM.nameEntry + '=' + encodeURIComponent(name) + '&' + FORM.scoreEntry + '=' + encodeURIComponent(score);
+  }
+
+  /* ---- sounds Korean learners find tricky ---- */
+  var SOUNDS = {
+    th:{label:'th', ko:'θ/ð', tip:'<b>th</b> · 혀끝을 윗니와 아랫니 사이에 살짝 내밀고 바람을 내보내요. ㅆ(sank)이나 ㄷ(dat)로 바뀌지 않게! 예) <b>th</b>ank, <b>th</b>e'},
+    f:{label:'f', ko:'ㅍ 아님', tip:'<b>f</b> · 윗니를 아랫입술에 살짝 대고 바람을 \'ffff\' 흘려보내요. 두 입술을 붙이면 ㅍ(p)가 돼요. 예) <b>f</b>ood, cou<b>gh</b>'},
+    v:{label:'v', ko:'ㅂ 아님', tip:'<b>v</b> · f와 같은 입 모양에서 목을 울려요(목에 손을 대면 떨려요). 입술을 붙이면 ㅂ(b)가 돼요. 예) <b>v</b>ery, o<b>f</b>'},
+    r:{label:'r', ko:'혀 말기', tip:'<b>r</b> · 혀끝을 입천장 어디에도 닿지 않게 살짝 뒤로 말고, 입술을 조금 둥글게 해요. 단어 끝 r도 살려요. 예) <b>r</b>ice, ca<b>r</b>'},
+    l:{label:'l', ko:'혀 붙이기', tip:'<b>l</b> · 혀끝을 윗니 뒤 잇몸에 꾹 붙이고 소리 내요. 단어 끝 l(school)은 혀를 붙인 채로 끝내요. 예) <b>l</b>ight, coo<b>l</b>'}
+  };
+  var SOUND_ORDER = ['th','f','v','r','l'];
+  var SILENT_L = ['could','would','should','half','calm','walk','talk','chalk','palm','folk','salmon'];
+  var GH_F = ['laugh','laughed','laughing','laughs','enough','tough','rough','cough'];
+
+  /* returns [{start,end,sound}] over the lowercase word */
+  function findSounds(word){
+    var w = word.toLowerCase(), out = [], used = {};
+    function mark(s,e,snd){ for (var k=s;k<e;k++){ if (used[k]) return; } for (var k2=s;k2<e;k2++) used[k2]=1; out.push({start:s,end:e,sound:snd}); }
+    var bare = w.replace(/[^a-z']/g,'');
+    var i;
+    for (i=0;i<w.length-1;i++){ if (w.substr(i,2)==='th') mark(i,i+2,'th'); }
+    for (i=0;i<w.length-1;i++){ if (w.substr(i,2)==='ph') mark(i,i+2,'f'); }
+    if (GH_F.indexOf(bare) !== -1){ var g = w.indexOf('gh'); if (g>=0) mark(g,g+2,'f'); }
+    for (i=0;i<w.length;i++){
+      var c = w[i];
+      if (c==='f') mark(i,i+1, bare==='of' ? 'v' : 'f');
+      else if (c==='v') mark(i,i+1,'v');
+      else if (c==='r') mark(i,i+1,'r');
+      else if (c==='l' && SILENT_L.indexOf(bare)===-1) mark(i,i+1,'l');
+    }
+    out.sort(function(a,b){ return a.start-b.start; });
+    return out;
+  }
+
+  /* ---- text normalization & alignment ---- */
+  var NUMWORDS = {'0':'zero','1':'one','2':'two','3':'three','4':'four','5':'five','6':'six','7':'seven','8':'eight','9':'nine','10':'ten'};
+  function normTokens(s){
+    s = (s||'').toLowerCase().replace(/[‘’]/g,"'").replace(/(\d),(\d)/g,'$1$2').replace(/-/g,' ');
+    s = s.replace(/[^a-z0-9' ]/g,' ').replace(/\s+/g,' ').trim();
+    if (!s) return [];
+    return s.split(' ').map(function(t){ return t.replace(/^'+|'+$/g,''); }).filter(Boolean);
+  }
+  function isFree(t){ return /^\d+$/.test(t) || t === 'noeul'; }
+  function same(a,b){
+    if (a===b) return true;
+    var a2=a.replace(/'/g,''), b2=b.replace(/'/g,'');
+    if (a2===b2) return true;
+    if (NUMWORDS[a]===b || NUMWORDS[b]===a) return true;
+    if ((a==='ok'&&b==='okay')||(a==='okay'&&b==='ok')) return true;
+    return false;
+  }
+  /* target tokens t[], heard tokens h[] -> boolean[] matched for each t */
+  function align(t,h){
+    var n=t.length, m=h.length, dp=[], i, j;
+    for (i=0;i<=n;i++){ dp.push(new Array(m+1).fill(0)); }
+    for (i=1;i<=n;i++) for (j=1;j<=m;j++){
+      var best = Math.max(dp[i-1][j], dp[i][j-1]);
+      if (same(t[i-1],h[j-1])) best = Math.max(best, dp[i-1][j-1]+1);
+      if (j>=2 && same(t[i-1], h[j-2]+h[j-1])) best = Math.max(best, dp[i-1][j-2]+1);
+      if (i>=2 && same(t[i-2]+t[i-1], h[j-1])) best = Math.max(best, dp[i-2][j-1]+2);
+      dp[i][j]=best;
+    }
+    var matched = new Array(n).fill(false);
+    i=n; j=m;
+    while (i>0 && j>0){
+      if (same(t[i-1],h[j-1]) && dp[i][j]===dp[i-1][j-1]+1){ matched[i-1]=true; i--; j--; }
+      else if (j>=2 && same(t[i-1],h[j-2]+h[j-1]) && dp[i][j]===dp[i-1][j-2]+1){ matched[i-1]=true; i--; j-=2; }
+      else if (i>=2 && same(t[i-2]+t[i-1],h[j-1]) && dp[i][j]===dp[i-2][j-1]+2){ matched[i-1]=matched[i-2]=true; i-=2; j--; }
+      else if (dp[i][j]===dp[i-1][j]) i--;
+      else j--;
+    }
+    return matched;
+  }
+
+  /* build display model for a sentence */
+  function buildSentence(item){
+    var words = item.sentence.split(/\s+/).filter(Boolean);
+    var flat = [];
+    var disp = words.map(function(w, di){
+      var toks = normTokens(w);
+      var idx = toks.map(function(t){ flat.push({t:t, d:di, free:isFree(t)}); return flat.length-1; });
+      return { raw:w, toks:idx, sounds:findSounds(w), target:false };
+    });
+    markTarget(disp, item.word);
+    return { disp:disp, flat:flat };
+  }
+  var POSS = ['my','your','his','her','its','our','their'];
+  function wordMatch(tw, dw){
+    if (tw==='~' || tw==='…') return true;
+    if (tw==="one's") return POSS.indexOf(dw)!==-1;
+    if (tw.length < 3) return tw===dw;
+    var stem = tw.slice(0, Math.max(3, tw.length-2));
+    return dw.indexOf(stem)===0;
+  }
+  function markTarget(disp, phrase){
+    var tw = phrase.toLowerCase().replace(/[’]/g,"'").replace(/-/g,'').split(/\s+/).filter(Boolean);
+    var dws = disp.map(function(d){ return d.raw.toLowerCase().replace(/[’]/g,"'").replace(/[^a-z']/g,''); });
+    for (var s=0; s<=dws.length-tw.length; s++){
+      var ok = true;
+      for (var k=0;k<tw.length;k++){ if (!wordMatch(tw[k], dws[s+k])){ ok=false; break; } }
+      if (ok){ for (var k2=0;k2<tw.length;k2++) disp[s+k2].target = true; return; }
+    }
+    tw.forEach(function(t){
+      if (t.length<4 || t==='~' || t==='…') return;
+      dws.forEach(function(d,i){ if (wordMatch(t,d)) disp[i].target = true; });
+    });
+  }
+
+  /* ---- state ---- */
+  var state = { name:'', unit:'', items:[], index:0, model:null, activeSound:'', results:{}, listening:false, mode:'sentence', miniWord:'', miniEl:null, rate:0.95 };
+
+  var $ = function(id){ return document.getElementById(id); };
+  var els = {
+    studentLabel:$('studentLabel'), score:$('scoreDisplay'), pondView:$('pondView'), stones:$('stonesContainer'), practiceView:$('practiceView'),
+    progCurrent:$('progressCurrent'), progTotal:$('progressTotal'), progFill:$('progressFill'),
+    bubble:$('speechBubble'), dog:$('dogWrap'), confetti:$('confettiLayer'),
+    unitBadge:$('unitBadge'), targetWord:$('targetWord'), targetMeaning:$('targetMeaning'), sentence:$('sentence'),
+    listenBtn:$('listenBtn'), slowBtn:$('slowBtn'), soundsBox:$('soundsBox'), chips:$('chips'), tip:$('tip'),
+    micBtn:$('micBtn'), micLabel:$('micLabel'), live:$('liveText'), hint:$('hintText'),
+    feedback:$('feedback'), meter:$('meter'), verdict:$('verdict'), heard:$('heardText'), missList:$('missList'),
+    retryBtn:$('retryBtn'), nextBtn:$('nextBtn'), unsupported:$('unsupportedBox'),
+    nameOverlay:$('nameOverlay'), nameInput:$('nameInput'), startBtn:$('startBtn'),
+    overlay:$('celebrateOverlay'), celebrateName:$('celebrateName'), celebrateScore:$('celebrateScore'), celebrateSub:$('celebrateSub'),
+    recordLink:$('recordLink'), anotherUnitBtn:$('anotherUnitBtn'), restartBtn:$('restartBtn')
+  };
+  els.practiceView.hidden = true;
+
+  /* ---- dog ---- */
+  function setDog(s){ els.dog.setAttribute('data-state', s); var face = s==='listening'?'listening':s; ['normal','happy','listening','confused'].forEach(function(n){ var e=els.dog.querySelector('.eyes-'+n); if(e) e.hidden = n!==(face==='idle'?'normal':face); var m=els.dog.querySelector('.mouth-'+n); if(m) m.hidden = n!==(face==='happy'?'happy':face==='confused'?'confused':'normal'); }); }
+  function confetti(){
+    var colors=['#FF9A4D','#4FB6E0','#3FAE68','#FFD166','#EF476F'];
+    for (var i=0;i<16;i++){ var p=document.createElement('span'); p.className='confetti-piece'; var a=Math.random()*Math.PI*2, d=50+Math.random()*60;
+      p.style.setProperty('--dx',Math.cos(a)*d+'px'); p.style.setProperty('--dy',(Math.sin(a)*d-30)+'px'); p.style.setProperty('--rot',(Math.random()*360)+'deg');
+      p.style.background=colors[i%5]; p.style.animation='confettiFly .9s ease-out forwards'; els.confetti.appendChild(p);
+      (function(n){ setTimeout(function(){ n.remove(); },1100); })(p); }
+  }
+
+  /* ---- TTS ---- */
+  var synth = window.speechSynthesis;
+  var voice = null;
+  function pickVoice(){
+    if (!synth) return;
+    var vs = synth.getVoices();
+    voice = vs.filter(function(v){ return /en[-_]US/i.test(v.lang) && /Google|Samantha|Aria|Jenny/i.test(v.name); })[0] || vs.filter(function(v){ return /en[-_]US/i.test(v.lang); })[0] || vs.filter(function(v){ return /^en/i.test(v.lang); })[0] || null;
+  }
+  if (synth){ pickVoice(); if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = pickVoice; }
+  function speak(text, rate, el){
+    if (!synth){ els.hint.textContent = '이 브라우저는 듣기 기능을 지원하지 않아요.'; return; }
+    synth.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = 'en-US'; u.rate = rate || 0.95; if (voice) u.voice = voice;
+    if (el){ el.classList.add('speaking'); u.onend = u.onerror = function(){ el.classList.remove('speaking'); }; }
+    synth.speak(u);
+  }
+
+  /* ---- render ---- */
+  function escapeHtml(s){ return s.replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function wordHtml(d){
+    var html='', pos=0, w=d.raw;
+    d.sounds.forEach(function(s){
+      if (state.activeSound !== s.sound) return;
+      html += escapeHtml(w.slice(pos,s.start)) + '<span class="hl hl-'+s.sound+'">'+escapeHtml(w.slice(s.start,s.end))+'</span>';
+      pos = s.end;
+    });
+    return html + escapeHtml(w.slice(pos));
+  }
+  function renderSentence(matchedFlat){
+    var m = state.model;
+    els.sentence.innerHTML = '';
+    m.disp.forEach(function(d){
+      var b = document.createElement('button');
+      b.type='button'; b.className='tok' + (d.target?' target':'');
+      if (matchedFlat){
+        var real = d.toks.filter(function(k){ return !m.flat[k].free; });
+        if (!real.length && d.toks.length) b.classList.add('free');
+        else if (real.length){ b.classList.add(real.every(function(k){ return matchedFlat[k]; }) ? 'ok' : 'miss'); }
+      }
+      b.innerHTML = wordHtml(d);
+      b.setAttribute('aria-label', d.raw.replace(/[^A-Za-z0-9'’ -]/g,'') + ' 듣기');
+      b.addEventListener('click', function(){ speak(d.raw.replace(/[^A-Za-z0-9'’ -]/g,''), 0.8, b); });
+      els.sentence.appendChild(b);
+    });
+  }
+  function soundsInSentence(){
+    var counts = {};
+    state.model.disp.forEach(function(d){ d.sounds.forEach(function(s){ counts[s.sound]=(counts[s.sound]||0)+1; }); });
+    return counts;
+  }
+  function renderChips(){
+    var counts = soundsInSentence();
+    els.chips.innerHTML='';
+    var present = SOUND_ORDER.filter(function(s){ return counts[s]; });
+    els.soundsBox.hidden = !present.length;
+    present.forEach(function(s){
+      var b=document.createElement('button'); b.type='button'; b.className='chip chip-'+s;
+      b.setAttribute('aria-pressed', state.activeSound===s ? 'true':'false');
+      b.innerHTML = SOUNDS[s].label + '<span>' + SOUNDS[s].ko + ' · ' + counts[s] + '</span>';
+      b.addEventListener('click', function(){ state.activeSound = (state.activeSound===s ? '' : s); renderChips(); renderSentence(state.lastMatched); });
+      els.chips.appendChild(b);
+    });
+    els.tip.innerHTML = state.activeSound ? SOUNDS[state.activeSound].tip : '위 소리를 누르면 문장에서 그 소리가 나는 글자가 색칠돼요.';
+  }
+  function defaultSound(){
+    var tgt = state.model.disp.filter(function(d){ return d.target; });
+    for (var i=0;i<SOUND_ORDER.length;i++){ var s=SOUND_ORDER[i]; if (tgt.some(function(d){ return d.sounds.some(function(x){ return x.sound===s; }); })) return s; }
+    var c = soundsInSentence();
+    for (var j=0;j<SOUND_ORDER.length;j++){ if (c[SOUND_ORDER[j]]) return SOUND_ORDER[j]; }
+    return '';
+  }
+
+  function updateScore(){
+    var passed = Object.keys(state.results).filter(function(k){ return state.results[k].pass; }).length;
+    els.score.textContent = '성공 ' + passed + '문장';
+  }
+  function loadItem(i){
+    state.index = i;
+    var it = state.items[i];
+    state.model = buildSentence(it);
+    state.lastMatched = null;
+    state.activeSound = defaultSound();
+    state.mode = 'sentence';
+    els.unitBadge.textContent = unitLabel(it.unit);
+    els.targetWord.textContent = it.word;
+    els.targetMeaning.textContent = it.meaning;
+    renderSentence(null); renderChips();
+    els.feedback.hidden = true; els.live.textContent = '';
+    els.bubble.textContent = '먼저 🔊 들어보고, 문장 전체를 나한테 말해줘!';
+    setDog('idle');
+    els.progCurrent.textContent = i+1;
+    els.progFill.style.width = Math.max(4, ((i+1)/state.items.length)*100) + '%';
+    els.micLabel.textContent = '눌러서 문장 말하기';
+  }
+
+  /* ---- grading ---- */
+  function grade(alts){
+    var m = state.model, tt = m.flat.map(function(f){ return f.t; });
+    var best = null;
+    alts.forEach(function(a){
+      var matched = align(tt, normTokens(a));
+      m.flat.forEach(function(f,k){ if (f.free) matched[k]=true; });
+      var real = m.flat.filter(function(f){ return !f.free; }).length || 1;
+      var hit = m.flat.filter(function(f,k){ return !f.free && matched[k]; }).length;
+      var score = hit/real;
+      if (!best || score > best.score) best = { score:score, matched:matched, heard:a };
+    });
+    return best;
+  }
+
+  function showResult(r){
+    var key = state.index, prev = state.results[key];
+    var pass = r.score >= PASS;
+    if (!prev || r.score > prev.score) state.results[key] = { score:r.score, pass:pass || (prev && prev.pass) };
+    else if (pass) prev.pass = true;
+    updateScore();
+    state.lastMatched = r.matched;
+    renderSentence(r.matched);
+    var pct = Math.round(r.score*100);
+    els.meter.textContent = pct + '%';
+    els.feedback.hidden = false;
+    els.feedback.className = 'feedback ' + (pass ? 'pass' : 'retry');
+    els.heard.innerHTML = r.heard ? '콩이가 들은 문장: <b>"' + escapeHtml(r.heard.trim()) + '"</b>' : '아무 소리도 못 들었어요.';
+    if (pct === 100){ els.verdict.textContent = '문장 전체가 목표 문장으로 인식되었어요! 🎉'; }
+    else if (pass){ els.verdict.textContent = '좋아요! 몇 단어만 한 번 더 연습해 볼까요?'; }
+    else { els.verdict.textContent = '초록 단어는 잘 들렸어요. 주황색 단어를 연습하고 다시 말해봐요!'; }
+    els.bubble.textContent = pass ? '멍멍! 문장으로 잘 말했어요! 🎉' : '음... 몇 단어가 잘 안 들렸어. 같이 연습해보자! 🤔';
+    setDog(pass ? 'happy' : 'confused');
+    if (pass) confetti();
+    renderMissList(r.matched);
+    els.nextBtn.textContent = state.index >= state.items.length-1 ? '결과 보기 ▶' : '다음 문장 ▶';
+  }
+
+  function renderMissList(matched){
+    var m = state.model, missed = [];
+    m.disp.forEach(function(d){
+      var real = d.toks.filter(function(k){ return !m.flat[k].free; });
+      if (real.length && !real.every(function(k){ return matched[k]; })) missed.push(d);
+    });
+    els.missList.innerHTML = '';
+    els.missList.hidden = !missed.length;
+    if (!missed.length) return;
+    var title = document.createElement('p'); title.className='miss-title'; title.textContent='🔁 다시 연습할 단어 (듣고 → 단어만 말해보기)';
+    els.missList.appendChild(title);
+    missed.slice(0,5).forEach(function(d){
+      var clean = d.raw.replace(/[^A-Za-z0-9'’ -]/g,'');
+      var row = document.createElement('div'); row.className='miss-row';
+      var w = document.createElement('span'); w.className='miss-word'; w.textContent = clean; row.appendChild(w);
+      var seen = {};
+      d.sounds.forEach(function(s){ if (seen[s.sound]) return; seen[s.sound]=1; var t=document.createElement('span'); t.className='sound-tag hl-'+s.sound; t.textContent=SOUNDS[s.sound].label; t.title=SOUNDS[s.sound].ko; row.appendChild(t); });
+      var sp = document.createElement('span'); sp.className='spacer'; row.appendChild(sp);
+      var res = document.createElement('span'); res.className='mini-result';
+      var hear = document.createElement('button'); hear.type='button'; hear.className='mini'; hear.textContent='🔊 듣기';
+      hear.addEventListener('click', function(){ speak(clean, 0.75); var first = d.sounds[0]; if (first){ state.activeSound = first.sound; renderChips(); renderSentence(state.lastMatched); } });
+      var say = document.createElement('button'); say.type='button'; say.className='mini mic'; say.textContent='🎤 말해보기';
+      say.addEventListener('click', function(){ startListening('word', clean, res); });
+      row.appendChild(hear); row.appendChild(say); row.appendChild(res);
+      els.missList.appendChild(row);
+    });
+  }
+
+  function finish(){
+    var keys = Object.keys(state.results);
+    var attempted = keys.length;
+    var passed = keys.filter(function(k){ return state.results[k].pass; }).length;
+    var avg = attempted ? Math.round(keys.reduce(function(s,k){ return s+state.results[k].score; },0)/attempted*100) : 0;
+    els.celebrateName.textContent = (state.name ? state.name + '님, ' : '') + '수고했어요!';
+    els.celebrateScore.textContent = passed + ' / ' + attempted;
+    var msg = avg>=90 ? '문장 말하기 달인이에요! 🌟' : avg>=70 ? '정말 잘했어요! 🎉' : avg>=40 ? '멋진 시도예요! 조금만 더 💪' : '시작이 반이에요! 🐾';
+    els.celebrateSub.textContent = unitLabel(state.unit) + ' · 도전한 ' + attempted + '문장 중 ' + passed + '문장 성공 · 평균 문장 인식률 ' + avg + '% · ' + msg;
+    els.recordLink.href = formUrl((state.name||'이름없음') + ' (문장 ' + unitLabel(state.unit) + ')', passed + '/' + attempted + ' (평균 문장 인식률 ' + avg + '%)');
+    setDog('happy');
+    els.overlay.hidden = false;
+  }
+
+  /* ---- speech recognition ---- */
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  var rec = null;
+  if (SR){
+    rec = new SR();
+    rec.lang = 'en-US'; rec.interimResults = true; rec.maxAlternatives = 5; rec.continuous = false;
+    var gotFinal = false;
+    rec.onstart = function(){
+      state.listening = true; gotFinal = false;
+      setDog('listening');
+      els.micBtn.classList.add('listening');
+      els.micLabel.textContent = state.mode==='word' ? '"' + state.miniWord + '" 듣는 중...' : '듣는 중... 문장을 말해요';
+      els.bubble.textContent = '귀 기울이고 있어요... 🎧';
+      els.live.textContent = '';
+      if (synth) synth.cancel();
+    };
+    rec.onresult = function(e){
+      var interim = '', finals = [], allFinal = true;
+      for (var i=0;i<e.results.length;i++){
+        if (e.results[i].isFinal) finals.push(e.results[i]); else { allFinal = false; interim += e.results[i][0].transcript; }
+      }
+      els.live.textContent = Array.prototype.map.call(e.results, function(r){ return r[0].transcript; }).join(' ');
+      if (!allFinal || !finals.length) return;
+      gotFinal = true;
+      var maxAlt = Math.max.apply(null, finals.map(function(r){ return r.length; }));
+      var alts = [];
+      for (var k=0;k<maxAlt;k++){ alts.push(finals.map(function(r){ return r[Math.min(k, r.length-1)].transcript; }).join(' ')); }
+      handleAlts(alts);
+    };
+    rec.onerror = function(e){
+      if (e.error === 'not-allowed' || e.error === 'service-not-allowed'){
+        els.hint.textContent = '마이크 권한이 필요해요! 주소창 옆 마이크 아이콘에서 허용해주세요.';
+      }
+    };
+    rec.onend = function(){
+      state.listening = false;
+      els.micBtn.classList.remove('listening');
+      els.micLabel.textContent = '눌러서 문장 말하기';
+      if (!gotFinal){ handleAlts(['']); }
+    };
+  } else {
+    els.unsupported.hidden = false;
+    els.micBtn.disabled = true;
+  }
+
+  function handleAlts(alts){
+    if (state.mode === 'word'){
+      var target = normTokens(state.miniWord);
+      var ok = alts.some(function(a){ var h = normTokens(a); return align(target, h).every(Boolean); });
+      if (state.miniEl){ state.miniEl.className = 'mini-result ' + (ok?'ok':'no'); state.miniEl.textContent = ok ? '✔ 좋아요!' : (alts[0] ? '✖ "' + alts[0].trim() + '"' : '✖ 못 들었어요'); }
+      setDog(ok ? 'happy' : 'confused');
+      els.bubble.textContent = ok ? '그 단어 좋았어! 이제 문장 전체로 다시 말해볼까? 🐾' : '한 번 더! 🔊 듣고 입 모양 팁을 따라 해봐요.';
+      state.mode = 'sentence';
+      return;
+    }
+    showResult(grade(alts));
+  }
+
+  function startListening(mode, word, resultEl){
+    if (!rec){ els.unsupported.hidden = false; return; }
+    if (state.listening) return;
+    state.mode = mode; state.miniWord = word || ''; state.miniEl = resultEl || null;
+    if (resultEl){ resultEl.className='mini-result'; resultEl.textContent='듣는 중...'; }
+    try { rec.start(); } catch(err){}
+  }
+
+  /* ---- unit selection & flow ---- */
+  function renderStones(){
+    els.stones.innerHTML='';
+    UNITS.forEach(function(u,i){
+      var n = ITEMS.filter(function(x){ return x.unit===u; }).length;
+      var b=document.createElement('button'); b.type='button'; b.className='stone';
+      b.style.marginLeft = (i%2===0)?'-20px':'20px';
+      b.innerHTML = escapeHtml(unitLabel(u)) + '<small>' + n + '문장</small>';
+      b.addEventListener('click', function(){ selectUnit(u); });
+      els.stones.appendChild(b);
+    });
+  }
+  function selectUnit(u){
+    state.unit = u; state.items = ITEMS.filter(function(x){ return x.unit===u; }); state.results = {};
+    els.progTotal.textContent = state.items.length;
+    updateScore();
+    els.pondView.hidden = true; els.practiceView.hidden = false;
+    loadItem(0);
+  }
+  function backToPond(){ if (synth) synth.cancel(); els.overlay.hidden = true; els.practiceView.hidden = true; els.pondView.hidden = false; }
+
+  els.listenBtn.addEventListener('click', function(){ speak(state.items[state.index].sentence, 0.95); });
+  els.slowBtn.addEventListener('click', function(){ speak(state.items[state.index].sentence, 0.65); });
+  els.micBtn.addEventListener('click', function(){ startListening('sentence'); });
+  els.retryBtn.addEventListener('click', function(){ els.feedback.hidden = true; setDog('idle'); els.bubble.textContent = '괜찮아요, 문장 전체를 다시 말해봐요! 🐾'; });
+  els.nextBtn.addEventListener('click', function(){ if (state.index >= state.items.length-1) finish(); else loadItem(state.index+1); });
+  $('finishBtn').addEventListener('click', finish);
+  $('backToPondBtn').addEventListener('click', backToPond);
+  els.anotherUnitBtn.addEventListener('click', backToPond);
+  els.restartBtn.addEventListener('click', function(){
+    state.name=''; state.unit=''; state.items=[]; state.results={};
+    els.overlay.hidden = true; els.practiceView.hidden = true; els.pondView.hidden = true;
+    els.studentLabel.textContent = '듣고 따라 말하며 문장으로 연습하기';
+    updateScore();
+    els.nameInput.value=''; els.nameOverlay.hidden=false; setTimeout(function(){ els.nameInput.focus(); },50);
+  });
+  function begin(){
+    var n = els.nameInput.value.trim();
+    if (!n){ els.nameInput.focus(); return; }
+    state.name = n; els.studentLabel.textContent = n + ' 학생 연습 중';
+    els.nameOverlay.hidden = true; renderStones(); els.pondView.hidden = false;
+  }
+  els.startBtn.addEventListener('click', begin);
+  els.nameInput.addEventListener('keydown', function(e){ if (e.key==='Enter') begin(); });
+  setTimeout(function(){ els.nameInput.focus(); },100);
+
+  window.__test = { align:align, normTokens:normTokens, buildSentence:buildSentence, findSounds:findSounds, grade:function(item, alts){ state.model = buildSentence(item); return grade(alts); }, ITEMS:ITEMS };
+})();
+</script>
+</body></html>"""
+practice_html = practice_html.replace("__WORDS_JSON__", WORDS_JSON)
+
+components.html(
+    practice_html,
+    height=1450,
+    scrolling=True,
+)
+
+st.write("")
+
+c1, c2 = st.columns(2)
+
+with c1:
+    if st.button(
+        "🐶 단어 발음으로 돌아가기",
+        use_container_width=True
+    ):
+        st.switch_page("pages/04🐥_발음짱이 될거야.py")
+
+with c2:
+    if st.button(
+        "🏠 처음으로",
+        use_container_width=True
+    ):
+        st.switch_page("HOME.py")
