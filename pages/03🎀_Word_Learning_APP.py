@@ -8,8 +8,8 @@ from io import BytesIO
 # =========================================================
 
 st.set_page_config(
-    page_title="Word Learning",
-    page_icon="🐰",
+    page_title="소리로 익히기",
+    page_icon="🎧",
     layout="centered"
 )
 
@@ -454,7 +454,7 @@ st.markdown(
 )
 
 st.markdown(
-    '<div class="main-title">Word Playground</div>',
+    '<div class="main-title">🎧 소리로 익히기</div>',
     unsafe_allow_html=True
 )
 
@@ -470,8 +470,8 @@ st.markdown(
 st.markdown(
     """
 <div class="info-card">
-🎧 먼저 <b>소리</b>를 많이 들어 보세요.<br>
-눈으로만 외우지 말고 귀로도 단어를 익혀요!
+🎧 단어를 눈으로만 보지 말고<br>
+<b>듣고, 뜻을 떠올리고, 다시 확인</b>해 보세요!
 </div>
 """,
     unsafe_allow_html=True
