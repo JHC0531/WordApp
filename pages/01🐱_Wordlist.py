@@ -6,7 +6,7 @@ import pandas as pd
 # =========================================================
 
 st.set_page_config(
-    page_title="Word Journey",
+    page_title="나만의 단어 골라보기",
     page_icon="🐱",
     layout="centered"
 )
@@ -308,14 +308,14 @@ st.markdown(
 )
 
 st.markdown(
-    '<div class="main-title">Word Journey</div>',
+    '<div class="main-title">🐱 나만의 단어 골라보기</div>',
     unsafe_allow_html=True
 )
 
 st.markdown(
     """
 <div class="subtitle">
-내가 집중해서 공부할 단어를 골라볼까요?
+내가 더 공부하고 싶은 단어를 골라볼까요?
 </div>
 """,
     unsafe_allow_html=True
