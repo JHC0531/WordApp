@@ -1,19 +1,10 @@
 import streamlit as st
 import pandas as pd
+import json
+import html
+import streamlit.components.v1 as components
 
-# =========================================================
-# PAGE CONFIG
-# =========================================================
-
-st.set_page_config(
-    page_title="나만의 단어 골라보기",
-    page_icon="🐱",
-    layout="centered"
-)
-
-# =========================================================
-# CSS
-# =========================================================
+st.set_page_config(page_title="나만의 단어장 만들기", page_icon="🐱", layout="centered")
 
 st.markdown("""
 <style>
@@ -204,613 +195,184 @@ div.stButton > button:hover {
 </style>
 """, unsafe_allow_html=True)
 
-# =========================================================
-# LOAD DATA
-# =========================================================
-
+# 기존 CSV 형식을 그대로 사용합니다.
 @st.cache_data
 def load_words():
-    df = pd.read_csv("data/wordlist_1001.csv")
-
-    required_columns = [
-        "word_id",
-        "unit",
-        "word",
-        "meaning",
-        "example",
-        "pronunciation_caution"
-    ]
-
-    missing = [
-        column
-        for column in required_columns
-        if column not in df.columns
-    ]
-
+    df = pd.read_csv("data/wordlist_1001.csv", dtype={"word_id": str}).fillna("")
+    required = ["word_id", "unit", "word", "meaning", "example", "pronunciation_caution"]
+    missing = [c for c in required if c not in df.columns]
     if missing:
-        raise ValueError(
-            f"CSV에 다음 열이 없습니다: {missing}"
-        )
-
-    df = df.fillna("")
-
+        raise ValueError(f"CSV에 다음 열이 없습니다: {missing}")
+    if df["word_id"].duplicated().any():
+        raise ValueError("word_id는 전체 CSV에서 중복되면 안 됩니다.")
     return df
-
 
 try:
     df = load_words()
-
 except Exception as e:
     st.error("단어 파일을 불러오지 못했어요.")
     st.code(str(e))
     st.stop()
 
-# =========================================================
-# SESSION STATE
-# =========================================================
+# 기존 학습 페이지와의 호환성을 위해 saved_words/discarded_words 유지
+for key, default in {
+    "selected_unit": None,
+    "word_positions": {},
+    "saved_words": {},
+    "discarded_words": {},
+    "word_history": {},
+    "self_assessments": {},
+}.items():
+    if key not in st.session_state:
+        st.session_state[key] = default
 
-if "selected_unit" not in st.session_state:
-    st.session_state.selected_unit = None
-
-if "word_positions" not in st.session_state:
-    st.session_state.word_positions = {}
-
-if "saved_words" not in st.session_state:
-    st.session_state.saved_words = {}
-
-if "discarded_words" not in st.session_state:
-    st.session_state.discarded_words = {}
-
-if "word_history" not in st.session_state:
-    st.session_state.word_history = {}
-
-# =========================================================
-# UNITS
-# =========================================================
-
-preferred_order = [
-    "Unit 4",
-    "Unit 5",
-    "Unit 6",
-    "Unit 7",
-    "Special Reading 1",
-    "Special Reading 2"
-]
-
+preferred_order = ["Unit 4", "Unit 5", "Unit 6", "Unit 7", "Special Reading 1", "Special Reading 2"]
 available_units = df["unit"].unique().tolist()
+units = [u for u in preferred_order if u in available_units] + [u for u in available_units if u not in preferred_order]
+unit_mascots = {"Unit 4": "🐰", "Unit 5": "🐱", "Unit 6": "🐻", "Unit 7": "🐶", "Special Reading 1": "🐹", "Special Reading 2": "🦊"}
 
-units = [
-    unit
-    for unit in preferred_order
-    if unit in available_units
-]
 
-for unit in available_units:
-    if unit not in units:
-        units.append(unit)
+def speak_button(word, unique_id):
+    # 브라우저 음성합성: 인터넷 TTS API 키가 필요 없지만 브라우저별 음질은 다를 수 있습니다.
+    js_word = json.dumps(str(word), ensure_ascii=False)
+    components.html(f"""
+    <div style="display:flex;justify-content:center">
+      <button id="play_{unique_id}" style="background:#fff0f7;border:2px solid #efc7de;
+       border-radius:22px;padding:20px 28px;font-size:23px;cursor:pointer;font-weight:700">
+       🔊 단어 듣기 (클릭)
+      </button>
+    </div>
+    <script>
+    document.getElementById('play_{unique_id}').onclick = () => {{
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance({js_word});
+      utterance.lang = 'en-US'; utterance.rate = 0.85;
+      window.speechSynthesis.speak(utterance);
+    }};
+    </script>
+    """, height=92)
 
-unit_mascots = {
-    "Unit 4": "🐰",
-    "Unit 5": "🐱",
-    "Unit 6": "🐻",
-    "Unit 7": "🐶",
-    "Special Reading 1": "🐹",
-    "Special Reading 2": "🦊"
-}
 
-# =========================================================
-# TITLE
-# =========================================================
-
-st.markdown(
-    '<div class="mascot">🐾</div>',
-    unsafe_allow_html=True
-)
-
-st.markdown(
-    '<div class="main-title">🐱 나만의 단어 골라보기</div>',
-    unsafe_allow_html=True
-)
-
-st.markdown(
-    """
-<div class="subtitle">
-내가 더 공부하고 싶은 단어를 골라볼까요?
-</div>
-""",
-    unsafe_allow_html=True
-)
-
-# =========================================================
-# UNIT SELECTION
-# =========================================================
+st.markdown('<div class="mascot">🐾</div>', unsafe_allow_html=True)
+st.markdown('<div class="main-title">🐱 나만의 단어장 만들기</div>', unsafe_allow_html=True)
+st.markdown('<div class="subtitle">소리를 듣고 내가 아는 단어인지 확인해요!</div>', unsafe_allow_html=True)
 
 if st.session_state.selected_unit is None:
-
-    st.markdown(
-        """
-<div class="guide-box">
-🪨 아래 돌다리를 하나 골라 주세요.<br>
-선택한 Unit의 단어를 하나씩 만나면서<br>
-<b>공부하고 싶은 단어만 보관</b>해요!
-</div>
-""",
-        unsafe_allow_html=True
-    )
-
-    st.markdown("### 🌈 어디부터 건너볼까요?")
-
+    st.markdown('<div class="guide-box">🪨 단원을 선택하고 단어를 들어보세요.<br>뜻을 알면 <b>알아요</b>, 모르면 <b>잘 모르겠어요</b>를 선택해요.</div>', unsafe_allow_html=True)
+    st.markdown('### 🌈 어디부터 건너볼까요?')
     for i, unit in enumerate(units):
-
-        unit_df = df[
-            df["unit"] == unit
-        ]
-
-        saved_count = len(
-            st.session_state.saved_words.get(
-                unit,
-                []
-            )
-        )
-
-        total_count = len(unit_df)
-
-        mascot = unit_mascots.get(
-            unit,
-            "🐾"
-        )
-
-        if i % 2 == 0:
-            empty1, stone, empty2 = st.columns(
-                [0.3, 2.4, 1.1]
-            )
-        else:
-            empty1, stone, empty2 = st.columns(
-                [1.1, 2.4, 0.3]
-            )
-
-        with stone:
-
-            if saved_count > 0:
-
-                button_label = (
-                    f"🪨 {mascot} {unit}\n\n"
-                    f"📦 {saved_count}/{total_count}개 보관"
-                )
-
-            else:
-
-                button_label = (
-                    f"🪨 {mascot} {unit}\n\n"
-                    f"{total_count} words"
-                )
-
-            if st.button(
-                button_label,
-                key=f"unit_{unit}",
-                use_container_width=True
-            ):
-
+        unit_df = df[df['unit'] == unit]
+        completed = len(st.session_state.self_assessments.get(unit, {}))
+        total = len(unit_df)
+        mascot = unit_mascots.get(unit, '🐾')
+        left, center, right = st.columns([0.3, 2.4, 1.1] if i % 2 == 0 else [1.1, 2.4, 0.3])
+        with center:
+            if st.button(f'🪨 {mascot} {unit}\n\n{completed}/{total}개 확인', key=f'unit_{unit}', use_container_width=True):
                 st.session_state.selected_unit = unit
-
-                if unit not in st.session_state.word_positions:
-                    st.session_state.word_positions[unit] = 0
-
-                if unit not in st.session_state.saved_words:
-                    st.session_state.saved_words[unit] = []
-
-                if unit not in st.session_state.discarded_words:
-                    st.session_state.discarded_words[unit] = []
-
-                if unit not in st.session_state.word_history:
-                    st.session_state.word_history[unit] = []
-
+                st.session_state.word_positions.setdefault(unit, 0)
+                st.session_state.saved_words.setdefault(unit, [])
+                st.session_state.discarded_words.setdefault(unit, [])
+                st.session_state.word_history.setdefault(unit, [])
+                st.session_state.self_assessments.setdefault(unit, {})
                 st.rerun()
-
     st.stop()
-
-# =========================================================
-# SELECTED UNIT DATA
-# =========================================================
 
 unit = st.session_state.selected_unit
-
-unit_df = (
-    df[
-        df["unit"] == unit
-    ]
-    .reset_index(drop=True)
-)
-
+unit_df = df[df['unit'] == unit].reset_index(drop=True)
 total_words = len(unit_df)
+current_index = st.session_state.word_positions.get(unit, 0)
+saved_ids = st.session_state.saved_words.setdefault(unit, [])
+discarded_ids = st.session_state.discarded_words.setdefault(unit, [])
+history = st.session_state.word_history.setdefault(unit, [])
+assessments = st.session_state.self_assessments.setdefault(unit, {})
+mascot = unit_mascots.get(unit, '🐾')
 
-current_index = st.session_state.word_positions.get(
-    unit,
-    0
-)
-
-saved_ids = st.session_state.saved_words.get(
-    unit,
-    []
-)
-
-discarded_ids = st.session_state.discarded_words.get(
-    unit,
-    []
-)
-
-history = st.session_state.word_history.get(
-    unit,
-    []
-)
-
-mascot = unit_mascots.get(
-    unit,
-    "🐾"
-)
-
-# =========================================================
-# TOP NAVIGATION
-# =========================================================
-
-top_left, top_middle, top_right = st.columns(
-    [1.1, 2.5, 1.3]
-)
-
-with top_left:
-
-    if st.button(
-        "← Unit",
-        use_container_width=True
-    ):
-
+left, center, right = st.columns([1.1, 2.5, 1.3])
+with left:
+    if st.button('← Unit', use_container_width=True):
         st.session_state.selected_unit = None
-
         st.rerun()
+with center:
+    st.markdown(f'<div class="unit-title">{mascot} {html.escape(unit)}</div>', unsafe_allow_html=True)
+with right:
+    st.markdown(f'<div class="unit-count">🎧 {len(assessments)}/{total_words}</div>', unsafe_allow_html=True)
 
-with top_middle:
-
-    st.markdown(
-        f"""
-<div class="unit-title">
-{mascot} {unit}
-</div>
-""",
-        unsafe_allow_html=True
-    )
-
-with top_right:
-
-    st.markdown(
-        f"""
-<div class="unit-count">
-📦 {len(saved_ids)}
-</div>
-""",
-        unsafe_allow_html=True
-    )
-
-# =========================================================
-# COMPLETE
-# =========================================================
-
-if current_index >= total_words:
-
-    st.progress(1.0)
-
-    st.markdown(
-        f"""
-<div class="finish-card">
-<div class="finish-emoji">{mascot}🎉</div>
-<div class="finish-title">{unit} 선택 완료!</div>
-<div class="finish-text">
-총 {total_words}개의 단어를 모두 확인했어요.
-</div>
-<div class="finish-count">
-📦 보관한 단어 <b>{len(saved_ids)}</b>개<br>
-🗑️ 보내준 단어 <b>{len(discarded_ids)}</b>개
-</div>
-</div>
-""",
-        unsafe_allow_html=True
-    )
-
-    # -----------------------------------------------------
-    # SAVED WORDS
-    # -----------------------------------------------------
-
-    if saved_ids:
-
-        saved_df = unit_df[
-            unit_df["word_id"].isin(
-                saved_ids
-            )
-        ]
-
-        st.markdown("### 📦 나의 단어 보관함")
-
-        st.markdown(
-            """
-<div class="saved-box">
-🎧 다음 단계에서는 이 단어들만<br>
-소리와 함께 집중해서 공부해요!
-</div>
-""",
-            unsafe_allow_html=True
-        )
-
-        for _, saved_row in saved_df.iterrows():
-
-            st.markdown(
-                f"""
-**🐾 {saved_row["word"]}**  
-{saved_row["meaning"]}
-"""
-            )
-
-    else:
-
-        st.info(
-            "📦 보관한 단어가 없어요. "
-            "필요하면 다시 골라볼 수 있어요."
-        )
-
-    st.divider()
-
-    # -----------------------------------------------------
-    # COMPLETE BUTTONS
-    # -----------------------------------------------------
-
-    c1, c2 = st.columns(2)
-
-    with c1:
-
-        if st.button(
-            "🔄 다시 고르기",
-            use_container_width=True
-        ):
-
-            st.session_state.word_positions[unit] = 0
-
-            st.session_state.saved_words[unit] = []
-
-            st.session_state.discarded_words[unit] = []
-
-            st.session_state.word_history[unit] = []
-
-            st.rerun()
-
-    with c2:
-
-        if saved_ids:
-
-            if st.button(
-                "🎧 학습하러 가기 →",
-                type="primary",
-                use_container_width=True
-            ):
-
-                st.session_state.learning_unit = unit
-
-                st.switch_page(
-                    "pages/03🎀_Word_Learning_APP.py"
-                )
-
+if total_words == 0:
+    st.warning('이 단원에는 단어가 없습니다.')
     st.stop()
 
-# =========================================================
-# PROGRESS
-# =========================================================
-
-progress = (
-    current_index + 1
-) / total_words
-
-st.progress(progress)
-
-st.caption(
-    f"🌱 {current_index + 1} / {total_words}번째 단어"
-)
-
-# =========================================================
-# CURRENT WORD
-# =========================================================
-
-row = unit_df.iloc[
-    current_index
-]
-
-word = row["word"]
-meaning = row["meaning"]
-example = row["example"]
-
-st.markdown(
-    f"""
-<div class="word-card">
-<div class="word-number">WORD {current_index + 1}</div>
-<div class="word-main">{word}</div>
-<div class="word-meaning">{meaning}</div>
-<div class="example-label">📖 EXAMPLE</div>
-<div class="example">{example}</div>
-</div>
-""",
-    unsafe_allow_html=True
-)
-
-# =========================================================
-# QUESTION
-# =========================================================
-
-st.markdown(
-    """
-<div class="question-text">
-🐾 이 단어를 더 공부하고 싶나요?
-</div>
-""",
-    unsafe_allow_html=True
-)
-
-# =========================================================
-# KEEP / DISCARD
-# =========================================================
-
-keep_col, discard_col = st.columns(2)
-
-with keep_col:
-
-    if st.button(
-        "📦 보관할래요",
-        type="primary",
-        use_container_width=True
-    ):
-
-        word_id = row["word_id"]
-
-        if word_id not in st.session_state.saved_words[unit]:
-
-            st.session_state.saved_words[
-                unit
-            ].append(
-                word_id
-            )
-
-        if word_id in st.session_state.discarded_words[unit]:
-
-            st.session_state.discarded_words[
-                unit
-            ].remove(
-                word_id
-            )
-
-        st.session_state.word_history[
-            unit
-        ].append(
-            {
-                "word_id": word_id,
-                "action": "saved"
-            }
-        )
-
-        st.session_state.word_positions[
-            unit
-        ] += 1
-
-        st.rerun()
-
-with discard_col:
-
-    if st.button(
-        "🗑️ 버릴래요",
-        use_container_width=True
-    ):
-
-        word_id = row["word_id"]
-
-        if word_id not in st.session_state.discarded_words[unit]:
-
-            st.session_state.discarded_words[
-                unit
-            ].append(
-                word_id
-            )
-
-        if word_id in st.session_state.saved_words[unit]:
-
-            st.session_state.saved_words[
-                unit
-            ].remove(
-                word_id
-            )
-
-        st.session_state.word_history[
-            unit
-        ].append(
-            {
-                "word_id": word_id,
-                "action": "discarded"
-            }
-        )
-
-        st.session_state.word_positions[
-            unit
-        ] += 1
-
-        st.rerun()
-
-# =========================================================
-# UNDO
-# =========================================================
-
-st.write("")
-
-undo_left, undo_center, undo_right = st.columns(
-    [1, 2, 1]
-)
-
-with undo_center:
-
-    if history:
-
-        if st.button(
-            "↩️ 이전 선택 취소",
-            use_container_width=True
-        ):
-
-            last_action = (
-                st.session_state
-                .word_history[unit]
-                .pop()
-            )
-
-            previous_id = last_action[
-                "word_id"
-            ]
-
-            if last_action["action"] == "saved":
-
-                if previous_id in st.session_state.saved_words[unit]:
-
-                    st.session_state.saved_words[
-                        unit
-                    ].remove(
-                        previous_id
-                    )
-
-            elif last_action["action"] == "discarded":
-
-                if previous_id in st.session_state.discarded_words[unit]:
-
-                    st.session_state.discarded_words[
-                        unit
-                    ].remove(
-                        previous_id
-                    )
-
-            st.session_state.word_positions[
-                unit
-            ] = max(
-                0,
-                st.session_state.word_positions[unit] - 1
-            )
-
+if current_index >= total_words:
+    st.progress(1.0)
+    st.success(f'{unit} 자기평가 완료! 🎉')
+    st.write(f'잘 모르겠어요: **{len(saved_ids)}개** / 알아요: **{len(discarded_ids)}개**')
+    if saved_ids:
+        st.markdown('### 📦 나의 학습 단어')
+        selected = unit_df[unit_df['word_id'].astype(str).isin(saved_ids)]
+        for _, item in selected.iterrows():
+            st.write(f'🐾 **{item["word"]}** — {item["meaning"]}')
+    else:
+        st.info('모든 단어를 안다고 선택했어요. 형성평가에서는 모든 단어를 다시 확인해야 해요.')
+    st.caption('최초 자기평가 결과는 현재 브라우저 세션에만 보관됩니다. 연구용 영구 저장은 추후 추가해야 합니다.')
+    c1, c2 = st.columns(2)
+    with c1:
+        if st.button('🔄 다시 고르기', use_container_width=True):
+            st.session_state.word_positions[unit] = 0
+            st.session_state.saved_words[unit] = []
+            st.session_state.discarded_words[unit] = []
+            st.session_state.word_history[unit] = []
+            st.session_state.self_assessments[unit] = {}
             st.rerun()
+    with c2:
+        if st.button('🎧 학습하러 가기 →', type='primary', use_container_width=True):
+            st.session_state.learning_unit = unit
+            st.switch_page('pages/03🎀_Word_Learning_APP.py')
+    st.stop()
 
-# =========================================================
-# STATUS
-# =========================================================
+st.progress(current_index / total_words)
+st.caption(f'🌱 {current_index + 1} / {total_words}번째 단어')
+row = unit_df.iloc[current_index]
+word_id = str(row['word_id'])
+st.markdown(f'<div class="word-card"><div class="word-number">WORD {current_index + 1}</div><div class="word-main">🎧</div><div class="question-text">소리를 듣고 뜻을 알 수 있나요?</div></div>', unsafe_allow_html=True)
+speak_button(row['word'], current_index)
+st.caption('소리가 들리지 않으면 브라우저의 음성 출력 설정을 확인해 주세요.')
+
+
+def record_choice(choice):
+    # 최초 판단만 기록하고, 기존 학습 페이지에서 사용하는 단어 보관함도 갱신
+    assessments[word_id] = choice
+    if word_id in saved_ids:
+        saved_ids.remove(word_id)
+    if word_id in discarded_ids:
+        discarded_ids.remove(word_id)
+    if choice == 'unknown':
+        saved_ids.append(word_id)
+        action = 'saved'
+    else:
+        discarded_ids.append(word_id)
+        action = 'discarded'
+    history.append({'word_id': word_id, 'action': action})
+    st.session_state.word_positions[unit] += 1
+    st.rerun()
+
+c1, c2 = st.columns(2)
+with c1:
+    if st.button('😊 뜻을 알아요', type='primary', use_container_width=True):
+        record_choice('known')
+with c2:
+    if st.button('🤔 잘 모르겠어요', use_container_width=True):
+        record_choice('unknown')
+
+if history:
+    if st.button('↩️ 이전 선택 취소', use_container_width=True):
+        previous = history.pop()
+        prev_id = previous['word_id']
+        assessments.pop(prev_id, None)
+        if prev_id in saved_ids:
+            saved_ids.remove(prev_id)
+        if prev_id in discarded_ids:
+            discarded_ids.remove(prev_id)
+        st.session_state.word_positions[unit] = max(0, current_index - 1)
+        st.rerun()
 
 st.divider()
-
-status1, status2 = st.columns(2)
-
-with status1:
-
-    st.caption(
-        f"📦 보관함: {len(saved_ids)}개"
-    )
-
-with status2:
-
-    st.caption(
-        f"🗑️ 넘어간 단어: {len(discarded_ids)}개"
-    )
+st.caption(f'📦 학습할 단어 {len(saved_ids)}개  |  😊 안다고 선택한 단어 {len(discarded_ids)}개')
